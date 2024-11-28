@@ -25,6 +25,10 @@
 #  define L10N_BUFFER_TOO_SMALL_ERROR_MESSAGE \
 "buffer jest za mały dla tej wiadomości"
 
+// todo translate
+#  define L10N_CHAIN_TARGETS_UNSUPPORTED \
+"chain targets are not supported by this build"
+
 #  define L10N_CLOSE_UNSUPPORTED_TARGET_ERROR_MESSAGE \
 "próba zamknięcia pliku docelowego nieobsługiwanego typu"
 
@@ -114,6 +118,10 @@
 "a MULTI_SZ registry value was neither empty nor terminated with two NULL" \
 " characters"
 
+// todo translate
+#  define L10N_INVALID_PARAM_ERROR_MESSAGE \
+"the string is not of the name=\"value\" format"
+
 #  define L10N_INVALID_SEVERITY_ERROR_CODE_TYPE \
 "nieprawidłowa usługa"
 
@@ -162,6 +170,10 @@
 // todo translate
 #  define L10N_NAME_RESOLUTION_FAILED_ERROR_MESSAGE \
 "gethostbyname[2] and inet_pton failed to resolve the name"
+
+// todo translate
+#  define L10N_NETWORK_CLOSED_ERROR_MESSAGE \
+"the network connection is closed"
 
 #  define L10N_NETWORK_PROTOCOL_UNSUPPORTED_ERROR_MESSAGE \
 "wybrany protokół sieciowy nie jest obsługiwany"
@@ -213,12 +225,56 @@ ARG_NAME " miał wartość NULL"
 #  define L10N_SEND_WIN_SOCKET_FAILED_ERROR_MESSAGE \
 "wysyłanie winsock2 socketu przegrany"
 
+// todo translate
+#  define L10N_SEVERITY_COLORS_UNSUPPORTED_TARGET_ERROR_MESSAGE \
+"severity colors are only supported for stream targets"
+
 #  define L10N_SOCKET_FAILED_ERROR_MESSAGE \
 "otwór w gnieździe przegrany"
 
 // todo translate
 #  define L10N_SOURCE_REGISTRATION_TRANSACTION_DESCRIPTION_W \
 L"Stumpless registration of Windows Event Log Source"
+
+// todo translate
+#  define L10N_SQLITE3_BIND_FAILED_ERROR_MESSAGE( PARAM )  \
+"could not bind " PARAM " to the statement"
+
+// todo translate
+#  define L10N_SQLITE3_BUSY_ERROR_MESSAGE \
+"the database was busy and could not complete the transaction"
+
+// todo translate
+#  define L10N_SQLITE3_CLOSE_FAILED_ERROR_MESSAGE \
+"could not close the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_CUSTOM_PREPARE_FAILED_ERROR_MESSAGE \
+"a custom callback for prepared statements failed"
+
+// todo translate
+#  define L10N_SQLITE3_OPEN_FAILED_ERROR_MESSAGE \
+"could not open the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_PREPARE_FAILED_ERROR_MESSAGE \
+"sqlite3_prepare_v2 failed"
+
+// todo translate
+#  define L10N_SQLITE3_RESULT_CODE_TYPE \
+"the return code of the failed sqlite3 call"
+
+// todo translate
+#  define L10N_SQLITE3_RETRY_COUNT_CODE_TYPE \
+"the number of times the operation was retried"
+
+// todo translate
+#  define L10N_SQLITE3_STEP_FAILED_ERROR_MESSAGE \
+"sqlite3_step failed"
+
+// todo translate
+#  define L10N_SQLITE3_TARGETS_UNSUPPORTED \
+"sqlite3 targets are not supported by this build"
 
 #  define L10N_STREAM_WRITE_FAILURE_ERROR_MESSAGE \
 "nie mogę pisać do streamu"
@@ -271,4 +327,4 @@ L"Stumpless registration of Windows Event Log Source"
 #  define L10N_WSAGETLASTERROR_ERROR_CODE_TYPE \
 "wynik WSAGetLastError po niepowodzeniu połączenia"
 
-#endif //STUMPLESS_PL_PL_H
+#endif /* __STUMPLESS_PRIVATE_CONFIG_LOCALE_PL_PL_H */

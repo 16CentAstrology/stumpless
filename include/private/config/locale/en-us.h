@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2020-2023 Joel E. Anderson
+ * Copyright 2020-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@
 
 #  define L10N_BUFFER_TOO_SMALL_ERROR_MESSAGE \
 "buffer is too small for the given message"
+
+#  define L10N_CHAIN_TARGETS_UNSUPPORTED \
+"chain targets are not supported by this build"
 
 #  define L10N_CLOSE_UNSUPPORTED_TARGET_ERROR_MESSAGE \
 "attempted to close an unsupported target type"
@@ -112,6 +115,9 @@
 "a MULTI_SZ registry value was neither empty nor terminated with two NULL" \
 " characters"
 
+#  define L10N_INVALID_PARAM_ERROR_MESSAGE \
+"the string is not of the name=\"value\" format"
+
 #  define L10N_INVALID_SEVERITY_ERROR_CODE_TYPE \
 "the invalid severity"
 
@@ -154,6 +160,9 @@
 
 #  define L10N_NAME_RESOLUTION_FAILED_ERROR_MESSAGE \
 "gethostbyname[2] and inet_pton failed to resolve the name"
+
+#  define L10N_NETWORK_CLOSED_ERROR_MESSAGE \
+"the network connection is closed"
 
 #  define L10N_NETWORK_PROTOCOL_UNSUPPORTED_ERROR_MESSAGE \
 "chosen network protocol is unsupported"
@@ -200,11 +209,44 @@ ARG_NAME " was NULL"
 #  define L10N_SEND_WIN_SOCKET_FAILED_ERROR_MESSAGE \
 "send failed with a winsock2 socket"
 
+#  define L10N_SEVERITY_COLORS_UNSUPPORTED_TARGET_ERROR_MESSAGE \
+"severity colors are only supported for stream targets"
+
 #  define L10N_SOCKET_FAILED_ERROR_MESSAGE \
 "failed to open a socket"
 
 #  define L10N_SOURCE_REGISTRATION_TRANSACTION_DESCRIPTION_W \
 L"Stumpless registration of Windows Event Log Source"
+
+#  define L10N_SQLITE3_BIND_FAILED_ERROR_MESSAGE( PARAM )  \
+"could not bind " PARAM " to the statement"
+
+#  define L10N_SQLITE3_BUSY_ERROR_MESSAGE \
+"the database was busy and could not complete the transaction"
+
+#  define L10N_SQLITE3_CLOSE_FAILED_ERROR_MESSAGE \
+"could not close the sqlite3 database"
+
+#  define L10N_SQLITE3_CUSTOM_PREPARE_FAILED_ERROR_MESSAGE \
+"a custom callback for prepared statements failed"
+
+#  define L10N_SQLITE3_OPEN_FAILED_ERROR_MESSAGE \
+"could not open the sqlite3 database"
+
+#  define L10N_SQLITE3_PREPARE_FAILED_ERROR_MESSAGE \
+"sqlite3_prepare_v2 failed"
+
+#  define L10N_SQLITE3_RESULT_CODE_TYPE \
+"the return code of the failed sqlite3 call"
+
+#  define L10N_SQLITE3_RETRY_COUNT_CODE_TYPE \
+"the number of times the operation was retried"
+
+#  define L10N_SQLITE3_STEP_FAILED_ERROR_MESSAGE \
+"sqlite3_step failed"
+
+#  define L10N_SQLITE3_TARGETS_UNSUPPORTED \
+"sqlite3 targets are not supported by this build"
 
 #  define L10N_STREAM_WRITE_FAILURE_ERROR_MESSAGE \
 "could not write to the stream"

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ struct stumpless_entry;
  * This function must be safe to call from threads that may be asynchronously
  * cancelled.
  *
- * @since v2.1.0
+ * @since release v2.1.0
  *
  * @param entry The entry that the param is part of.
  *
@@ -143,8 +143,8 @@ struct stumpless_element {
 /**
  * Creates a new param and adds it to the given element.
  *
- * This is equivalent to calling stumpless_new_param and passing the result
- * directly stumpless_add_param.
+ * This is equivalent to calling stumpless_new_param() and passing the result
+ * directly stumpless_add_param().
  *
  * **Thread Safety: MT-Safe race:param_name race:param_value**
  * This function is thread safe, of course assuming that the param name and
@@ -239,34 +239,6 @@ stumpless_add_param( struct stumpless_element *element,
 STUMPLESS_PUBLIC_FUNCTION
 struct stumpless_element *
 stumpless_copy_element( const struct stumpless_element *element );
-
-/**
- * An alias for stumpless_destroy_element_and_contents.
- *
- * **Thread Safety: MT-Unsafe**
- * This function is not thread safe as it destroys resources that other threads
- * would use if they tried to reference this struct.
- *
- * **Async Signal Safety: AS-Unsafe lock heap**
- * This function is not safe to call from signal handlers due to the destruction
- * of a lock that may be in use as well as the use of the memory deallocation
- * function to release memory.
- *
- * **Async Cancel Safety: AC-Unsafe lock heap**
- * This function is not safe to call from threads that may be asynchronously
- * cancelled, as the cleanup of the lock may not be completed, and the memory
- * deallocation function may not be AC-Safe itself.
- *
- * @deprecated This function has been deprecated in favor of the more
- * descriptive and deliberate stumpless_destroy_element_and_contents and
- * stumpless_destroy_element_only functions in order to avoid unintentional
- * memory leaks and use-after-free mistakes.
- *
- * @param element The element to destroy.
- */
-STUMPLESS_PUBLIC_FUNCTION
-void
-stumpless_destroy_element( const struct stumpless_element *element );
 
 /**
  * Destroys an element as well as all params that it contains, freeing any
@@ -369,7 +341,7 @@ stumpless_element_has_param( const struct stumpless_element *element,
  *
  * @param element The element to get the name and params from.
  *
- * @return The formatted string of <name> or <name>:[param1,...] if no error is encountered.
+ * @return The formatted string of name or name=[param1,...] if no error is encountered.
  * If an error is  encountered, then NULL is returned and an error code is set appropriately.
  */
 STUMPLESS_PUBLIC_FUNCTION

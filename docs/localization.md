@@ -19,7 +19,7 @@ be accepted.
 Stumpless implements a simple framework to support different languages for
 human-readable output, such as error messages. This implementation is based on
 the use of header files with definitions for the strings based on a specific
-locale. A simple wrapper header, `private/config/locale/wrapper.h`, can then
+locale. A simple wrapper header, `private/config/wrapper/locale.h`, can then
 be included by source files. This wrapper header chooses the correct locale
 header based on the build configuration.
 
@@ -54,7 +54,7 @@ value of the string must be equal to the `en-us` value as a fallback. The
 `scripts/check_l10n.rb` script can check this, and is run during integration
 tests on all headers.
 
-The `scripts/add_l10n_scripts.rb` provides a quick way to do all of this for new
+The `scripts/add_l10n_string.rb` provides a quick way to do all of this for new
 strings. Run it with the name of the new string and the english translation,
 and it will insert placeholders into all locale headers. Here's an example
 invocation:
@@ -62,7 +62,7 @@ invocation:
 ```sh
 # this will result in a string of L10N_TEST_STR being added to all locale
 # headers with the english translation of "this is a test string"
-ruby scripts/add_l10n_scripts.rb TEST_STR this is a test string
+ruby scripts/add_l10n_string.rb TEST_STR this is a test string
 ```
 
 
@@ -100,25 +100,24 @@ defined symbols to reflect your new locale. Be sure that the name of the new
 header is a valid IETF Language Tag in all lowercase letters.
 
 After adding the header itself, you will need to tie it in to the build system
-by updating the `CMakeList.txt` file, the `include/private/config.h.in`
+by updating the `tools/cmake/l10n.cmake` file, the `include/private/config.h.in`
 header template, and the locale wrapper
-`include/private/config/locale/wrapper.h`. In the CMake script, add an `elseif`
-block to the chain of conditionals responsible for determining the locale (do a
-search for `STUMPLESS_LANGUAGE` to quickly find this) following the pattern of
-the others that are already there. Next, in the private config header template,
-add a definition for the locale symbol for the new locale. This symbol should
-be of the form `USE_LOCALE_XXX` where the last portion is the RFC 5646 language
-tag in all caps with underscore separators. Again, reference the already defined
-locales to see what this should look like. Finally, in the locale wrapper header
-add an `#elseif` statement for the new locale symbol in the same order as it
-appears in the CMake build script to include the new header.
+`include/private/config/wrapper/locale.h`. In the CMake script, add an `elseif`
+block to the chain of conditionals responsible for determining the locale
+following the pattern of the others that are already there. Next, in the private
+config header template, add a definition for the locale symbol for the new
+locale. This symbol should be of the form `USE_LOCALE_XXX` where the last
+portion is the RFC 5646 language tag in all caps with underscore separators.
+Again, reference the already defined locales to see what this should look like.
+Finally, in the locale wrapper header add an `#elseif` statement for the new
+locale symbol in the same order as it appears in the CMake build script to
+include the new header.
 
 The last step is to add new CI builds for the new locale to make sure that
 there are no immediate problems and catch any future ones that arise. This is
 done by updating the `.github/workflows/locale.yml` configuration file with a
-build profile for the new language. This is relatively simple: just copy one of
-the existing jobs (for example `linux-es-es`) and update it to use your new
-locale.
+build profile for the new language. This is relatively simple: just make a new
+line in the build matrix with the new language.
 
 Finally, add a flag for the new locale to the project README (in the Key
 Features section) to show off your hard work to everyone else!

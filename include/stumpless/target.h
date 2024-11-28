@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2023 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,50 +25,57 @@
  */
 
 #ifndef __STUMPLESS_TARGET_H
-#  define __STUMPLESS_TARGET_H
+#define __STUMPLESS_TARGET_H
 
-#  include <stdarg.h>
-#  include <stdbool.h>
-#  include <stddef.h>
-#  include <stdio.h>
-#  include <stumpless/config.h>
-#  include <stumpless/entry.h>
-#  include <stumpless/id.h>
-#  include <stumpless/generator.h>
-
-/** The file opened if the default target is to a file. */
-#  define STUMPLESS_DEFAULT_FILE "stumpless-default.log"
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stumpless/config.h>
+#include <stumpless/entry.h>
+#include <stumpless/id.h>
+#include <stumpless/generator.h>
 
 /** The name of the default target. */
-#  define STUMPLESS_DEFAULT_TARGET_NAME "stumpless-default"
+#define STUMPLESS_DEFAULT_TARGET_NAME "stumpless-default"
 
-#  ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#  endif
+#endif
 
-/**< write to a character buffer */
-# define STUMPLESS_BUFFER_TARGET_VALUE 0
+/** write to a character buffer */
+#define STUMPLESS_BUFFER_TARGET_VALUE 0
 
-/**< write to a file */
-# define STUMPLESS_FILE_TARGET_VALUE 1
+/** write to a file */
+#define STUMPLESS_FILE_TARGET_VALUE 1
 
-/**< call a custom function */
-# define STUMPLESS_FUNCTION_TARGET_VALUE 2
+/** call a custom function */
+#define STUMPLESS_FUNCTION_TARGET_VALUE 2
 
-/**< send to the systemd journald service */
-# define STUMPLESS_JOURNALD_TARGET_VALUE 3
+/** send to the systemd journald service */
+#define STUMPLESS_JOURNALD_TARGET_VALUE 3
 
-/**< send to a network endpoint */
-# define STUMPLESS_NETWORK_TARGET_VALUE 4
+/** send to a network endpoint */
+#define STUMPLESS_NETWORK_TARGET_VALUE 4
 
-/**< write to a Unix socket */
-# define STUMPLESS_SOCKET_TARGET_VALUE 5
+/** write to a Unix socket */
+#define STUMPLESS_SOCKET_TARGET_VALUE 5
 
-/**< write to a FILE stream */
-# define STUMPLESS_STREAM_TARGET_VALUE 6
+/** write to a FILE stream */
+#define STUMPLESS_STREAM_TARGET_VALUE 6
 
-/**< add to the Windows Event Log */
-# define STUMPLESS_WINDOWS_EVENT_LOG_TARGET_VALUE 7
+/** add to the Windows Event Log */
+#define STUMPLESS_WINDOWS_EVENT_LOG_TARGET_VALUE 7
+
+/** add to a SQLite3 database */
+#define STUMPLESS_SQLITE3_TARGET_VALUE 8
+
+/**
+ * write to a series of targets
+ *
+ * @since release v2.2.0
+ */
+#define STUMPLESS_CHAIN_TARGET_VALUE 9
 
 /**
  * A macro function that runs the provided action once for each target_type,
@@ -76,25 +83,21 @@ extern "C" {
  * first being the symbol name of the target_type, and the second the numeric
  * value of the target_type.
  */
-#  define STUMPLESS_FOREACH_TARGET_TYPE( ACTION )\
-/**< write to a character buffer */\
+#define STUMPLESS_FOREACH_TARGET_TYPE( ACTION )\
 ACTION( STUMPLESS_BUFFER_TARGET, STUMPLESS_BUFFER_TARGET_VALUE )\
-/**< write to a file */\
 ACTION( STUMPLESS_FILE_TARGET, STUMPLESS_FILE_TARGET_VALUE )\
-/**< call a custom function */\
 ACTION( STUMPLESS_FUNCTION_TARGET, STUMPLESS_FUNCTION_TARGET_VALUE )\
-/**< send to the systemd journald service */\
 ACTION( STUMPLESS_JOURNALD_TARGET, STUMPLESS_JOURNALD_TARGET_VALUE )\
-/**< send to a network endpoint */\
 ACTION( STUMPLESS_NETWORK_TARGET, STUMPLESS_NETWORK_TARGET_VALUE )\
-/**< write to a Unix socket */\
 ACTION( STUMPLESS_SOCKET_TARGET, STUMPLESS_SOCKET_TARGET_VALUE )\
-/**< write to a FILE stream */\
 ACTION( STUMPLESS_STREAM_TARGET, STUMPLESS_STREAM_TARGET_VALUE )\
-/**< add to the Windows Event Log */\
-ACTION( STUMPLESS_WINDOWS_EVENT_LOG_TARGET, STUMPLESS_WINDOWS_EVENT_LOG_TARGET_VALUE )
+ACTION( STUMPLESS_WINDOWS_EVENT_LOG_TARGET, STUMPLESS_WINDOWS_EVENT_LOG_TARGET_VALUE )\
+ACTION( STUMPLESS_SQLITE3_TARGET, STUMPLESS_SQLITE3_TARGET_VALUE )\
+ACTION( STUMPLESS_CHAIN_TARGET, STUMPLESS_CHAIN_TARGET_VALUE )
 
-/** Types of targets that may be created. */
+/**
+ * Types of targets that may be created.
+ */
 enum stumpless_target_type {
   STUMPLESS_FOREACH_TARGET_TYPE( STUMPLESS_GENERATE_ENUM )
 };
@@ -179,18 +182,19 @@ struct stumpless_target {
 /**
  * A filter function used to determine if a given entry should be processed by
  * this target or ignored. If this is NULL, then all entries sent to the target
- * are accepted. By default, targets use a filter that
+ * are accepted. By default targets use the stumpless_mask_filter which filters
+ * messages based on the severity bits in the mask of the target.
  *
  * @since release v2.1.0
  */
   stumpless_filter_func_t filter;
-#  ifdef STUMPLESS_THREAD_SAFETY_SUPPORTED
+#ifdef STUMPLESS_THREAD_SAFETY_SUPPORTED
 /**
  * A pointer to a mutex which protects all target fields. The exact type of
  * this mutex depends on the build.
  */
   void *mutex;
-#  endif
+#endif
 };
 
 /**
@@ -426,6 +430,11 @@ stumpless_add_message_str( struct stumpless_target *target,
 /**
  * Closes a target.
  *
+ * Targets that can be closed in multiple ways will be closed in the most
+ * complete way possible. Specifically, SQLite3 targets will have the underlying
+ * database connection closed as well, and chain targets will have all targets
+ * in them closed.
+ *
  * This function can be used when you'd like to avoid checking the type of the
  * target and then calling the appropriate close function. Note that use of this
  * doesn't actually avoid the check - it just does the check on your behalf. It
@@ -466,7 +475,7 @@ stumpless_close_target( struct stumpless_target *target );
  * This function is safe to call from threads that may be ansynchronously
  * cancelled.
  *
- * @since v2.1.0
+ * @since release v2.1.0
  *
  * @return The current stream where messages are logged to on setting the
  * the CONS option.
@@ -811,7 +820,7 @@ stumpless_open_target( struct stumpless_target *target );
  * This function is safe to call from threads that may be ansynchronously
  * cancelled.
  *
- * @since v2.1.0
+ * @since release v2.1.0
  *
  * @param stream The stream to write logs to. If this is NULL then the messages
  *	intended for the console stream will be ignored.
@@ -1628,11 +1637,11 @@ vstumpless_trace_message( struct stumpless_target *target,
  */
 STUMPLESS_PUBLIC_FUNCTION
 const char *
-stumpless_get_target_type_string( enum stumpless_target_type target );
+stumpless_get_target_type_string( enum stumpless_target_type target_type );
 
 
-#  ifdef __cplusplus
+#ifdef __cplusplus
 }                               /* extern "C" */
-#  endif
+#endif
 
 #endif                          /* __STUMPLESS_TARGET_H */

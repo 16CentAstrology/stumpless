@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <ctype.h>
 #include <stddef.h>
 #include <string.h>
 #include "private/memory.h"
@@ -55,3 +56,40 @@ copy_cstring_with_length( const char *str, size_t *length ) {
   return new_string;
 }
 
+char *
+copy_cstring_length( const char *str, size_t length ) {
+  char *new_string;
+
+  new_string = alloc_mem( length + 1 );
+  if( !new_string ) {
+    return NULL;
+  }
+
+  memcpy( new_string, str, length );
+  new_string[length] = '\0';
+
+  return new_string;
+}
+
+void
+to_upper_case( char *str ) {
+  size_t i;
+
+  for( i = 0; str[i]; i++) {
+    str[i] = toupper( str[i] );
+  }
+}
+
+int
+strncasecmp_custom( const char *s1, const char *s2, size_t n ) {
+  if (n != 0) {
+    do {
+      if (tolower(*s1) != tolower(*s2++))
+        return tolower(*--s2) - tolower(*s1);
+      if (*s1++ == '\0')
+        break;
+    } while (--n != 0);
+    if(*s2 != '\0') return tolower(*s2) - tolower(*s1);
+  }
+  return 0;
+}

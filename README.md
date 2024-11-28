@@ -1,4 +1,4 @@
-![Stumpless logo](assets/logo-and-name.png)
+![Stumpless logo](./assets/logo-and-name.svg)
 
 **A C logging library built for high performance and a rich feature set.**
 
@@ -11,6 +11,10 @@
 [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.1-ff69b4.svg)](https://github.com/goatshriek/stumpless/blob/latest/docs/CODE_OF_CONDUCT.md)
 
+
+[한국어](./l10n/ko-kr/README.md) | [简体中文](./l10n/zh-cn/自述.md)
+
+
 [Key Features](#key-features) |
 [Build and Install](#quick-build-and-install) |
 [Basic Usage](#basic-usage) |
@@ -18,20 +22,18 @@
 
 
 ## Key Features
-Stumpless offers a robust set of features to make logging in C faster and
-easier:
- * easy logging to [lots of things](#what-can-it-log-to) like Splunk, rsyslog,
-   journald, the Windows Event Log, and more!
+Stumpless has lots of features that make logging in C fast and easy:
+ * log to [lots of things](#what-can-it-log-to) like Splunk, rsyslog,
+   journald, the Windows Event Log, sqlite, and more!
  * structured and unstructured logging to suit your needs
- * interoperable with common log daemons and libraries
- * builds for Linux, Windows, Mac, MinGW, MSYS2, Cygwin, and more
- * completely thread safe
- * can be adjusted or removed during compilation for zero runtime impact
- * localized for multiple languages :brazil: :bulgaria: :cn: :czech_republic:
-   :de: :es: :fr: :greece: :india: :it: :poland: :slovakia: :sweden: :us: :denmark: :israel: :kenya:
+ * builds on Linux, Windows, Mac, FreeBSD, MinGW, MSYS2, Cygwin, DOS, and more!
+ * thread safe
+ * can be adjusted or removed during compilation for zero runtime cost
+ * localized for multiple languages 🇦🇱 🇧🇷 🇧🇬 🇨🇳 🇨🇿 🇩🇪 🇩🇰 🇪🇸 🇫🇷 🇬🇷 🇭🇺 🇮🇳 🇮🇱 🇮🇹
+   🇯🇵 🇰🇪 🇰🇷 🇵🇱 🇸🇰 🇱🇰 🇸🇪 🇹🇷 🇺🇸
    ([add yours!](https://github.com/goatshriek/stumpless/blob/latest/docs/localization.md))
  * easy-access
-   [documentation](https://goatshriek.github.io/stumpless/docs/c/latest/index.html),
+   [documentation](https://goatshriek.github.io/stumpless/docs/c/latest/),
    [examples](https://github.com/goatshriek/stumpless/tree/latest/docs/examples),
    and [support](https://gitter.im/stumpless/community).
 
@@ -42,10 +44,11 @@ a wide variety of log targets. This means you can focus on defining events
 and where you want them to go, without finding other SDKs or adding daemons
 and plugins to get them where you want. Stumpless can write logs to:
  * Simple character buffers
- * Files and Streams
+ * Files and streams
  * Unix sockets (such as a local syslog daemon)
- * Network Servers (IPv4 or IPv6, TCP or UDP)
- * Systemd Journald Service
+ * Network servers (IPv4 or IPv6, TCP or UDP)
+ * Systemd Journald service
+ * Sqlite3 databases
  * Windows Event Log
  * Custom functions, for whatever else you may need!
 
@@ -57,8 +60,7 @@ with your request and we'll work it into our
 
 ## Quick Build and Install
 Stumpless only requires cmake and a cmake-supported build toolchain (like GCC
-or Visual Studio) to build. For a system using the standard GNU make toolchain,
-you can simply do:
+or Visual Studio) to build.
 
 ```sh
 # cloning the latest version of the source tree
@@ -72,10 +74,10 @@ cd build
 cmake ../stumpless
 
 # building stumpless (with 4 threads - adjust as desired)
-make -j 4 all
+cmake --build . --parallel 4
 
 # install the library (you probably need sudo to do this)
-sudo make install
+sudo cmake --install .
 ```
 
 Check out the [Installation Instructions](INSTALL.md) for more detail on
@@ -84,10 +86,6 @@ toolchains.
 
 
 ## Basic Usage
-The following code snippets show the most common ways to use stumpless.
-
-
-### Basic Logging Functions
 The simplest way to get started is to use the `stumplog` function as a direct
 replacement for the standard library's `syslog` function:
 
@@ -95,25 +93,19 @@ replacement for the standard library's `syslog` function:
 // if you're used to doing this:
 syslog( LOG_INFO | LOG_USER, "My message #%d", count );
 
-// then you can start doing this:
+// then you can start by changing to this:
 stumplog( LOG_INFO | LOG_USER, "My message #%d", count );
 ```
 
 If you haven't opened a target, this will log messages to the default target for
 the platform: on Linux this is `/dev/log`, on a Mac system this will be
 `/var/run/syslog`, and on a Windows machine it is the Windows Event Log. If you
-open a target or a few before calling `stumplog`, then logs will be sent to the
-most recently opened target.
+open a target or even a few before calling `stumplog`, then logs will be sent to
+the most recently opened target.
 
 If you want an even shorter function call, you can use the `stump` function
-to send a message to the current target:
-
-```c
-stump( "My message #%d", count );
-```
-
-And of course, you can use format specifiers in both functions just as you would
-with `printf`:
+to send a message to the current target. You can also use format specifiers just
+as you would with `printf`:
 
 ```c
 stump( "Login attempt failure #%d for user %s", count, username );
@@ -127,7 +119,7 @@ stump_str( "Login failure! See structured data for info." );
 ```
 
 If you want to open a specific target rather than using the default, then just
-open the target that you need and start sending messages. For example, to log to
+open the one you need and start sending messages. For example, to log to
 a file named `example.log`:
 
 ```c
@@ -167,10 +159,10 @@ stump_i( "this gets logged as an info message" );
 ```
 
 And if you want to also see source file, line number, and function name info in
-each message you can do this:
+each message you can use `_t` (the 't' is for trace):
 
 ```c
-stump_t( "this is easy to trace to the source" );
+stump_t( "this includes source info" );
 ```
 
 Using these functions has the added benefit that they can be removed at
@@ -192,10 +184,11 @@ stump_i( "I'm doing that thing you asked" );
 stump_d( "DEBUG info: %d, %d, %s", thing_1, thing_2, stringy_thingy );
 ```
 
-Check out the headers in [stumpless/level](include/stumpless/level) to see the
-full list of severity shorthand functions, or the
-[severity level example](docs/examples/severity_level) to see a complete program
-in action.
+Check out the headers in
+[stumpless/level](https://github.com/goatshriek/stumpless/tree/latest/include/stumpless/level)
+to see the full list of severity shorthand functions, or the
+[severity level example](https://github.com/goatshriek/stumpless/tree/latest/docs/examples/severity_level)
+to see a complete program in action.
 
 
 ### Even more examples
@@ -230,18 +223,37 @@ If an item catches your interest, drop a comment in the existing issue or open
 a new one if it doesn't exist yet and state your intent to work on it so that
 others will have a way to know it is underway.
 
-Or perhaps you are just looking for a way to say thanks! If that's the case or
-if there is something that you would prefer to drop me a private message about,
-please feel free to do so on Twitter with
-[#StumplessLib](https://twitter.com/search?q=%23StumplessLib), or in an
-[email](mailto:joelanderson333@gmail.com)! I'd love to see you share the project
-with others or just hear your thoughts on it.
 
-
-## Further Documentation
+## Documentation and Community
 If you're curious about how something in stumpless works that isn't explained
 here, you can check the appropriate section of the documentation, stored in the
-docs folder of the repository. Folders in the repository contain their own
-README files that detail what they contain and any other relevant information.
-If you still can't find an answer, submit an issue or head over to
-[gitter](https://gitter.im/stumpless/community) and ask for some help.
+[docs](https://github.com/goatshriek/stumpless/blob/latest/docs/) folder.
+Folders in the repository contain their own README files that detail what they
+contain and any other relevant information. The documentation for each function
+is also hosted on the
+[project website](https://goatshriek.github.io/stumpless/), for both the C
+library as well as the other language bindings like C++.
+
+Stumpless also includes documentation in local installations in the form of
+`man` pages. Once you've installed the library, you can check the documentation
+for any header file (and the functions it contains) by running man with the
+name of the header with directories replaced with underscores, for example
+`man stumpless_log.h` to see documentation for functions that log simple string
+messages.
+
+There are also plenty of ways that you can reach out to the project team and
+broader community for support.
+ * [Issues](https://github.com/goatshriek/stumpless/issues) and
+   [discussions](https://github.com/goatshriek/stumpless/discussions) on Github
+   are good ways to get a response if you have a specific question or
+   suggestion.
+ * There is a persistent chat on [gitter](https://gitter.im/stumpless/community)
+   where you can find announcements and ask questions.
+ * News about the project are typically announced on Twitter as well by
+   [goatshriek](https://twitter.com/goatshriek), using
+   [#StumplessLib](https://twitter.com/search?q=%23StumplessLib).
+ * You can reach the primary maintainer via [email](mailto:joel@goatshriek.com)
+   if you want private communication. This is the preferred method for
+   [notifying](https://github.com/goatshriek/stumpless/blob/latest/docs/SECURITY.md#reporting-a-vulnerability)
+   us of security issues with the project, so that we can address them as
+   quickly as possible to reduce the risk of abuse.

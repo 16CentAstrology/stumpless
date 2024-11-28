@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,14 @@
 #include <stumpless/target/function.h>
 #include <stumpless/target/stream.h>
 #include "private/config.h"
-#include "private/config/network_support_wrapper.h"
-#include "private/config/locale/wrapper.h"
-#include "private/config/wrapper.h"
+#include "private/config/wrapper/locale.h"
+#include "private/config/wrapper/chain.h"
+#include "private/config/wrapper/open_default_target.h"
 #include "private/config/wrapper/wel.h"
 #include "private/config/wrapper/journald.h"
+#include "private/config/wrapper/network_supported.h"
 #include "private/config/wrapper/socket.h"
+#include "private/config/wrapper/sqlite3.h"
 #include "private/config/wrapper/thread_safety.h"
 #include "private/element.h"
 #include "private/entry.h"
@@ -52,6 +54,7 @@
 #include "private/inthelper.h"
 #include "private/memory.h"
 #include "private/param.h"
+#include "private/prival.h"
 #include "private/severity.h"
 #include "private/strbuilder.h"
 #include "private/strhelper.h"
@@ -158,12 +161,14 @@ fail:
 
 const char *
 stumpless_get_target_type_string( enum stumpless_target_type target_type ){
-  size_t target_type_upper_bound =
-    sizeof target_type_enum_to_string / sizeof target_type_enum_to_string[0];
-  if ( target_type >= 0 && target_type < target_type_upper_bound ) {
+  size_t upper_bound;
+
+  upper_bound = sizeof( target_type_enum_to_string ) / sizeof( const char * );
+  if ( target_type >= 0 && target_type < cap_size_t_to_int( upper_bound ) ) {
     return target_type_enum_to_string[target_type];
+  } else {
+    return "NO_SUCH_TARGET_TYPE";
   }
-  return "NO_SUCH_TARGET_TYPE";
 }
 
 static
@@ -207,6 +212,12 @@ stumpless_add_entry( struct stumpless_target *target,
     write_to_error_stream( buffer, builder_length );
   }
 
+  // chain targets simply pass the entry on
+  if( target->type == STUMPLESS_CHAIN_TARGET ) {
+    result = config_send_entry_to_chain_target( target->id, entry );
+    goto finish;
+  }
+
   // function targets are not formatted
   if( target->type == STUMPLESS_FUNCTION_TARGET ) {
     result = send_entry_to_function_target( target, entry );
@@ -216,6 +227,12 @@ stumpless_add_entry( struct stumpless_target *target,
   // journald targets are not formatted
   if( target->type == STUMPLESS_JOURNALD_TARGET ) {
     result = config_send_entry_to_journald_target( target, entry );
+    goto finish;
+  }
+
+  // sqlite3 targets are not formatted
+  if( target->type == STUMPLESS_SQLITE3_TARGET ) {
+    result = config_send_entry_to_sqlite3_target( target, entry );
     goto finish;
   }
 
@@ -251,7 +268,7 @@ stumpless_add_entry( struct stumpless_target *target,
       break;
 
     case STUMPLESS_STREAM_TARGET:
-      result = sendto_stream_target( target->id, buffer, builder_length );
+      result = sendto_stream_target( target->id, buffer, builder_length, entry );
       break;
 
     case STUMPLESS_WINDOWS_EVENT_LOG_TARGET:
@@ -381,6 +398,10 @@ stumpless_close_target( struct stumpless_target *target ) {
       stumpless_close_buffer_target( target );
       break;
 
+    case STUMPLESS_CHAIN_TARGET:
+      config_close_chain_and_contents( target );
+      break;
+
     case STUMPLESS_FILE_TARGET:
       stumpless_close_file_target( target );
       break;
@@ -399,6 +420,10 @@ stumpless_close_target( struct stumpless_target *target ) {
 
     case STUMPLESS_SOCKET_TARGET:
       config_close_socket_target( target );
+      break;
+
+    case STUMPLESS_SQLITE3_TARGET:
+      config_close_sqlite3_target_and_db( target );
       break;
 
     case STUMPLESS_STREAM_TARGET:

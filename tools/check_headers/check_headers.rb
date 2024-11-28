@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# Copyright 2019 Joel E. Anderson
+# Copyright 2019-2023 Joel E. Anderson
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ end
 
 common_known_terms = {}
 %w[benchmark.yml standard_library.yml gtest.yml stumpless.yml
-   stumpless_private.yml stumplesscpp.yml].each do |filename|
+   stumpless_private.yml stumplesscpp.yml sqlite.yml].each do |filename|
   load_manifest(filename, common_known_terms)
 end
 
@@ -98,7 +98,7 @@ ARGV.each do |source_glob|
         next
       end
 
-      if skipping || line.match?(/\s*\/\/.*/)
+      if skipping || line.match?(/^\s*\/\/.*/)
         # skip if in skipping mode or only a single-line comment
         next
       end

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,20 @@
 /** Marks functions that are provided for use by the library. */
 #define STUMPLESS_PUBLIC_FUNCTION @PUBLIC_FUNCTION_DECORATION@
 
+/**
+ * The length of the array in the chain target structure. Chains where all
+ * targets fit into this array will require less dynamic memory and fewer
+ * dereferences, speeding up their performance.
+ *
+ * @since release v2.2.0
+ */
+#define STUMPLESS_CHAIN_TARGET_ARRAY_LENGTH @CHAIN_TARGET_ARRAY_LENGTH@
+
 /** The facility code to use when one is not supplied. */
 #define STUMPLESS_DEFAULT_FACILITY @DEFAULT_FACILITY@
+
+/** The name of the file opened if the default target is to a file. */
+#define STUMPLESS_DEFAULT_FILE "@DEFAULT_FILE@"
 
 /** The severity code to use when one is not supplied. */
 #define STUMPLESS_DEFAULT_SEVERITY @DEFAULT_SEVERITY@
@@ -45,6 +57,9 @@
 /** The language stumpless was built for, as an RFC 5646 language tag. */
 #define STUMPLESS_LANGUAGE "@STUMPLESS_LANGUAGE@"
 
+/** Defined if chain targets are supported by this build. */
+#cmakedefine STUMPLESS_CHAIN_TARGETS_SUPPORTED 1
+
 /** Defined if journald targets are supported by this build. */
 #cmakedefine STUMPLESS_JOURNALD_TARGETS_SUPPORTED 1
 
@@ -53,6 +68,25 @@
 
 /** Defined if socket targets are supported by this build. */
 #cmakedefine STUMPLESS_SOCKET_TARGETS_SUPPORTED 1
+
+/**
+ * A string literal with the name of the table used by default for SQLite3
+ * targets.
+ *
+ * @since release v2.2.0
+ */
+#define STUMPLESS_DEFAULT_SQLITE3_TABLE_NAME_STRING                             \
+"@SQLITE3_DEFAULT_TABLE_NAME@"
+
+/**
+ * The maximum number of retries for SQLite operations.
+ *
+ * @since release v2.2.0
+ */
+#define STUMPLESS_SQLITE3_RETRY_MAX @SQLITE3_RETRY_MAX@
+
+/** Defined if sqlite3 targets are supported by this build. */
+#cmakedefine STUMPLESS_SQLITE3_TARGETS_SUPPORTED 1
 
 /** Defined if this build can directly replace syslog.h usage. */
 #cmakedefine STUMPLESS_SYSLOG_H_COMPATIBLE 1

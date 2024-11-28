@@ -25,6 +25,10 @@
 #  define L10N_BUFFER_TOO_SMALL_ERROR_MESSAGE \
 "le tampon est trop petit pour le message donné"
 
+// todo translate
+#  define L10N_CHAIN_TARGETS_UNSUPPORTED \
+"chain targets are not supported by this build"
+
 #  define L10N_CLOSE_UNSUPPORTED_TARGET_ERROR_MESSAGE \
 "tentative de fermeture d'un type de cible no supporté"
 
@@ -107,6 +111,10 @@
 #  define L10N_INVALID_MULTI_SZ_ERROR_MESSAGE \
 "la valeur d'un registre MULTI_SZ n'était ni vide ni terminée par deux NULL"
 
+// todo translate
+#  define L10N_INVALID_PARAM_ERROR_MESSAGE \
+"the string is not of the name=\"value\" format"
+
 #  define L10N_INVALID_SEVERITY_ERROR_CODE_TYPE \
 "la sévérité invalide"
 
@@ -150,6 +158,10 @@
 
 #  define L10N_NAME_RESOLUTION_FAILED_ERROR_MESSAGE \
 "gethostbyname[2] et inet_pton échec de résolvez le nom"
+
+// todo translate
+#  define L10N_NETWORK_CLOSED_ERROR_MESSAGE \
+"the network connection is closed"
 
 #  define L10N_NETWORK_PROTOCOL_UNSUPPORTED_ERROR_MESSAGE \
 "le protocol réseaux choisi n'est pas supporté"
@@ -196,11 +208,55 @@ ARG_NAME " a été NULL"
 #  define L10N_SEND_WIN_SOCKET_FAILED_ERROR_MESSAGE \
 "envoi échoué avec un socket winsock2"
 
+// todo translate
+#  define L10N_SEVERITY_COLORS_UNSUPPORTED_TARGET_ERROR_MESSAGE \
+"severity colors are only supported for stream targets"
+
 #  define L10N_SOCKET_FAILED_ERROR_MESSAGE \
 "échec d'ouverture d'un socket"
 
 #  define L10N_SOURCE_REGISTRATION_TRANSACTION_DESCRIPTION_W \
 L"enregistrement Stumpless de Windows Event Log Source"
+
+// todo translate
+#  define L10N_SQLITE3_BIND_FAILED_ERROR_MESSAGE( PARAM )  \
+"could not bind " PARAM " to the statement"
+
+// todo translate
+#  define L10N_SQLITE3_BUSY_ERROR_MESSAGE \
+"the database was busy and could not complete the transaction"
+
+// todo translate
+#  define L10N_SQLITE3_CLOSE_FAILED_ERROR_MESSAGE \
+"could not close the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_CUSTOM_PREPARE_FAILED_ERROR_MESSAGE \
+"a custom callback for prepared statements failed"
+
+// todo translate
+#  define L10N_SQLITE3_OPEN_FAILED_ERROR_MESSAGE \
+"could not open the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_PREPARE_FAILED_ERROR_MESSAGE \
+"sqlite3_prepare_v2 failed"
+
+// todo translate
+#  define L10N_SQLITE3_RESULT_CODE_TYPE \
+"the return code of the failed sqlite3 call"
+
+// todo translate
+#  define L10N_SQLITE3_RETRY_COUNT_CODE_TYPE \
+"the number of times the operation was retried"
+
+// todo translate
+#  define L10N_SQLITE3_STEP_FAILED_ERROR_MESSAGE \
+"sqlite3_step failed"
+
+// todo translate
+#  define L10N_SQLITE3_TARGETS_UNSUPPORTED \
+"sqlite3 targets are not supported by this build"
 
 #  define L10N_STREAM_WRITE_FAILURE_ERROR_MESSAGE \
 "impossible d'écrire dans le flux"

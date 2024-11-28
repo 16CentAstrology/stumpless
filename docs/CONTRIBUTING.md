@@ -110,14 +110,16 @@ To create your own feature or update, you should fork the repository and create
 a new branch based on the `latest` branch. Don't forget to update the ChangeLog
 with your changes, and when you're ready open a pull request against `latest`.
 
-It is unusual, but you may find that it is more appropriate to base your branch
-on the `release` branch instead of `latest`. Some examples of these types of
-changes are:
- * updates to project documentation that is relevant to the current version of
-   the project as well as the next
- * patches that need to be applied to the current version of the library in
-   order to fix broken functionality (note that this will require updating the
-   library to the next patch level, for example from 1.3.2 to 1.3.3)
+It is unusual, but you may find that it is best to base your work on the
+`release` branch instead of `latest`. This is a lot more work than using
+`latest` though, since the changes still need to be merged into `latest` which
+may have diverged enough to cause conflicts. It will also probably require
+cutting a new patch-level release with the changes. So don't do this unless
+it's truly necessary, as in these cases:
+ * patches need to be applied to the last release in order to fix broken
+   functionality
+ * critical updates to documentation that could cause serious misuse or breakage
+   if not corrected
 
 Be sure to check out the [dependencies](dependencies.md) list to make sure that
 your development environment has all of the necessary tools. More specifically,
@@ -152,6 +154,21 @@ closed as stale.
 Stale items can always be reopened, so don't feel like the discussion is over
 forever if something gets closed! We just want to keep our active work nice
 and tidy for everyone to quickly see what we're doing (and what we aren't).
+
+
+## A note on AI
+Contributions to this project are judged primarily on quality. You are free to
+use whatever tools you like including LLMs or some other generative AI, of
+course provided that you have enough ownership over the result to contribute it
+freely.
+
+However if you use AI to generate a pull request, issue, or discussion response
+of low quality, it will be the same as if you submitted low-quality work that
+you made yourself. That is, the maintainers may begin to go through the
+[enforcement guidelines](https://github.com/goatshriek/stumpless/blob/latest/docs/CODE_OF_CONDUCT.md#enforcement-guidelines)
+of the Code of Conduct to correct the behavior. Be considerate of everyone's
+time and take the time to review your work and interactions before submitting,
+and you are unlikely to run into problems.
 
 
 ## Thanks!

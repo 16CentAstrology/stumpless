@@ -139,6 +139,7 @@
 "realloc":
   - "cstdlib"
   - "stdlib.h"
+"recv": "sys/socket.h"
 "recvfrom": "sys/socket.h"
 "regex_match": "regex"
 "RegisterEventSource":
@@ -157,9 +158,6 @@
 "SIG_ERR": "signal.h"
 "SIGINT": "signal.h"
 "signal": "signal.h"
-"size_t":
-  - "cstddef"
-  - "stddef.h"
 "snprintf":
  - "cstdio"
  - "stdio.h"
@@ -206,9 +204,6 @@
  - "cstdint"
  - "stdint.h"
 "uintptr_t": "stdint.h"
-"va_end": "stdarg.h"
-"va_list": "stdarg.h"
-"va_start": "stdarg.h"
 "vsnprintf": "stdio.h"
 "vsnprintf_s": "stdio.h"
 "WC_ERR_INVALID_CHARS":
@@ -217,7 +212,6 @@
 "WC_NO_BEST_FIT_CHARS":
   - "windows.h"
   - "private/windows_wrapper.h"
-"wchar_t": "stddef.h"
 "wcslen": "wchar.h"
 "wcsrtombs": "wchar.h"
 "wcstombs": "stdlib.h"
@@ -230,3 +224,5 @@
 "WSACleanup":
   - "winsock2.h"
   - "private/windows_wrapper.h"
+"isdigit": "ctype.h"
+"toupper": "ctype.h"

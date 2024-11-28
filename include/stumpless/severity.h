@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 
 #  include <stumpless/config.h>
 #  include <stumpless/generator.h>
+#  include <stddef.h>
 
 #  ifdef STUMPLESS_SYSLOG_H_COMPATIBLE
 #    include <syslog.h>
@@ -177,14 +178,31 @@ extern "C" {
 /**
  * All possible severity codes available to log entries.
  *
- * In versions prior to 2.0.0, these values were simply #define symbols. They
+ * In versions prior to 2.0.0, these values were simply \#define symbols. They
  * have been changed to an enum to clearly convey proper usage.
+ *
+ * See STUMPLESS_FOREACH_SEVERITY() and STUMPLESS_GENERATE_ENUM() for how the
+ * enumeration is actually defined.
  *
  * @since release v2.0.0.
  */
 enum stumpless_severity {
   STUMPLESS_FOREACH_SEVERITY( STUMPLESS_GENERATE_ENUM )
 };
+
+/**
+ * The default stumpless ansi terminal color values
+ */
+#define STUMPLESS_SEVERITY_EMERG_DEFAULT_COLOR   "\33[31;1m"
+#define STUMPLESS_SEVERITY_ALERT_DEFAULT_COLOR   "\33[31;1m"
+#define STUMPLESS_SEVERITY_CRIT_DEFAULT_COLOR    "\33[31m"
+#define STUMPLESS_SEVERITY_ERR_DEFAULT_COLOR     "\33[31m"
+#define STUMPLESS_SEVERITY_WARNING_DEFAULT_COLOR "\33[33m"
+#define STUMPLESS_SEVERITY_NOTICE_DEFAULT_COLOR  "\33[32m"
+#define STUMPLESS_SEVERITY_INFO_DEFAULT_COLOR    "\33[37m"
+#define STUMPLESS_SEVERITY_DEBUG_DEFAULT_COLOR   "\33[0m"
+
+
 
 /**
  * Equivalent to the DEBUG severity. Trace level messages include extra
@@ -240,6 +258,32 @@ stumpless_get_severity_string( enum stumpless_severity severity );
 STUMPLESS_PUBLIC_FUNCTION
 enum stumpless_severity
 stumpless_get_severity_enum( const char *severity_string );
+
+/**
+ * Gets the enum value corresponding to the given severity string in a buffer.
+ *
+ * **Thread Safety: MT-Safe**
+ * This function is thread safe.
+ *
+ * **Async Signal Safety: AS-Safe**
+ * This function is safe to call from signal handlers.
+ *
+ * **Async Cancel Safety: AC-Safe**
+ * This function is safe to call from threads that may be asynchronously
+ * cancelled.
+ *
+ * @since release v2.2.0.
+ *
+ * @param buffer The buffer containing the severity name to get the enum from.
+ *
+ * @param length The length of the buffer.
+ *
+ * @return The enum integer corresponding to the given severity or -1 if
+ * the string is not a valid severity name.
+ */
+STUMPLESS_PUBLIC_FUNCTION
+enum stumpless_severity
+stumpless_get_severity_enum_from_buffer(const char *buffer, size_t length);
 
 #  ifdef __cplusplus
 } /* extern "C" */

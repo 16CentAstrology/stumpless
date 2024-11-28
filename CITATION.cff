@@ -2,8 +2,8 @@ cff-version: 1.2.0
 title: Stumpless Logging Library
 license: Apache-2.0
 repository-code: "https://github.com/goatshriek/stumpless"
-version: 2.2.0
-date-released: 2023-01-16
+version: 3.0.0
+date-released: 2024-11-28
 keywords:
   - journald
   - logging
@@ -20,4 +20,4 @@ type: software
 authors:
   - given-names: Joel
     family-names: Anderson
-    email: joelanderson333@gmail.com
+    email: joel@goatshriek.com

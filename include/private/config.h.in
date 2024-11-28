@@ -43,6 +43,9 @@
 #cmakedefine HAVE_VSNPRINTF_S 1
 #cmakedefine HAVE_WCSRTOMBS_S 1
 #cmakedefine HAVE_WCSTOMBS_S 1
+#cmakedefine HAVE_SO_NOSIGPIPE 1
+#cmakedefine HAVE_MSG_NOSIGNAL 1
+
 
 /* function support checks */
 #cmakedefine SUPPORT_ABSTRACT_SOCKET_NAMES 1
@@ -57,6 +60,7 @@
 #cmakedefine USE_LOCALE_ES_ES 1
 #cmakedefine USE_LOCALE_FR_FR 1
 #cmakedefine USE_LOCALE_HI_IN 1
+#cmakedefine USE_LOCALE_TE_IN 1
 #cmakedefine USE_LOCALE_IT_IT 1
 #cmakedefine USE_LOCALE_SV_SE 1
 #cmakedefine USE_LOCALE_EN_US 1
@@ -65,6 +69,10 @@
 #cmakedefine USE_LOCALE_DA_DK 1
 #cmakedefine USE_LOCALE_HE_IL 1
 #cmakedefine USE_LOCALE_SW_KE 1
+#cmakedefine USE_LOCALE_TR_TR 1
+#cmakedefine USE_LOCALE_HU_HU 1
+#cmakedefine USE_LOCALE_SI_LK 1
+#cmakedefine USE_LOCALE_JA_JP 1
 
 /* optimizations */
 #define unlikely( EXPRESSION )  @UNLIKELY_FUNCTION@

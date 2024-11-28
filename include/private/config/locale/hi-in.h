@@ -25,6 +25,10 @@
 #  define L10N_BUFFER_TOO_SMALL_ERROR_MESSAGE \
 "दिए गए संदेश के लिए बफ़र बहुत छोटा है"
 
+// todo translate
+#  define L10N_CHAIN_TARGETS_UNSUPPORTED \
+"chain targets are not supported by this build"
+
 #  define L10N_CLOSE_UNSUPPORTED_TARGET_ERROR_MESSAGE \
 "एक असमर्थित लक्ष्य प्रकार को बंद करने का प्रयास किया गया"
 
@@ -109,6 +113,10 @@
 "एक MULTI_SZ रजिस्ट्री मान न तो खाली था और न ही दो NULL" \
 " अक्षर "
 
+// todo translate
+#  define L10N_INVALID_PARAM_ERROR_MESSAGE \
+"the string is not of the name=\"value\" format"
+
 #  define L10N_INVALID_SEVERITY_ERROR_CODE_TYPE \
 "अमान्य गंभीरता"
 
@@ -155,6 +163,10 @@
 #  define L10N_NAME_RESOLUTION_FAILED_ERROR_MESSAGE \
 "gethostbyname[2] and inet_pton failed to resolve the name"
 
+// todo translate
+#  define L10N_NETWORK_CLOSED_ERROR_MESSAGE \
+"the network connection is closed"
+
 #  define L10N_NETWORK_PROTOCOL_UNSUPPORTED_ERROR_MESSAGE \
 "चुना गया नेटवर्क प्रोटोकॉल असमर्थित है"
 
@@ -200,11 +212,55 @@ ARG_NAME " NULL था"
 #  define L10N_SEND_WIN_SOCKET_FAILED_ERROR_MESSAGE \
 "winsock2 सॉकेट के साथ भेजना विफल रहा"
 
+// todo translate
+#  define L10N_SEVERITY_COLORS_UNSUPPORTED_TARGET_ERROR_MESSAGE \
+"severity colors are only supported for stream targets"
+
 #  define L10N_SOCKET_FAILED_ERROR_MESSAGE \
 "सॉकेट खोलने में विफल"
 
 #  define L10N_SOURCE_REGISTRATION_TRANSACTION_DESCRIPTION_W \
 L"विंडोज इवेंट लॉग सोर्स का स्टंपलेस पंजीकरण"
+
+// todo translate
+#  define L10N_SQLITE3_BIND_FAILED_ERROR_MESSAGE( PARAM )  \
+"could not bind " PARAM " to the statement"
+
+// todo translate
+#  define L10N_SQLITE3_BUSY_ERROR_MESSAGE \
+"the database was busy and could not complete the transaction"
+
+// todo translate
+#  define L10N_SQLITE3_CLOSE_FAILED_ERROR_MESSAGE \
+"could not close the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_CUSTOM_PREPARE_FAILED_ERROR_MESSAGE \
+"a custom callback for prepared statements failed"
+
+// todo translate
+#  define L10N_SQLITE3_OPEN_FAILED_ERROR_MESSAGE \
+"could not open the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_PREPARE_FAILED_ERROR_MESSAGE \
+"sqlite3_prepare_v2 failed"
+
+// todo translate
+#  define L10N_SQLITE3_RESULT_CODE_TYPE \
+"the return code of the failed sqlite3 call"
+
+// todo translate
+#  define L10N_SQLITE3_RETRY_COUNT_CODE_TYPE \
+"the number of times the operation was retried"
+
+// todo translate
+#  define L10N_SQLITE3_STEP_FAILED_ERROR_MESSAGE \
+"sqlite3_step failed"
+
+// todo translate
+#  define L10N_SQLITE3_TARGETS_UNSUPPORTED \
+"sqlite3 targets are not supported by this build"
 
 #  define L10N_STREAM_WRITE_FAILURE_ERROR_MESSAGE \
 "धारा को नहीं लिख सका"

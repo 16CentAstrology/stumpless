@@ -34,18 +34,34 @@ stumpless_get_severity_string( enum stumpless_severity severity ) {
   return "NO_SUCH_SEVERITY";
 }
 
-enum stumpless_severity
-stumpless_get_severity_enum( const char *severity_string ) {
+enum stumpless_severity stumpless_get_severity_enum(const char *severity_string) {
+  return stumpless_get_severity_enum_from_buffer(severity_string, strlen(severity_string));
+}
+
+enum stumpless_severity stumpless_get_severity_enum_from_buffer(const char *severity_buffer, size_t severity_buffer_length) {
   size_t severity_bound;
   size_t i;
+  const int str_offset = 19; // to ommit "STUMPLESS_SEVERITY_"
 
   severity_bound = sizeof( severity_enum_to_string ) /
                      sizeof( severity_enum_to_string[0] );
 
-  for( i = 0; i < severity_bound;  i++ ) {
-    if( strcmp( severity_string, severity_enum_to_string[i] ) == 0 ) {
+  for( i = 0; i < severity_bound; i++ ) {
+    if( strncasecmp_custom( severity_buffer, severity_enum_to_string[i] + str_offset, severity_buffer_length ) == 0 ) {
       return i;
     }
+  }
+
+  if( strncasecmp_custom( severity_buffer, "PANIC", severity_buffer_length ) == 0 ) {
+    return STUMPLESS_SEVERITY_EMERG_VALUE;
+  }
+
+  if( strncasecmp_custom( severity_buffer, "ERROR", severity_buffer_length ) == 0 ) {
+    return STUMPLESS_SEVERITY_ERR_VALUE;
+  }
+
+  if( strncasecmp_custom( severity_buffer, "WARN", severity_buffer_length ) == 0 ) {
+    return STUMPLESS_SEVERITY_WARNING_VALUE;
   }
 
   return -1;

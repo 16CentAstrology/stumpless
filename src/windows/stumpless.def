@@ -8,8 +8,14 @@ EXPORTS
   stumpless_add_entry                           @3
   stumpless_add_param                           @4
   stumpless_close_buffer_target                 @5
-  stumpless_destroy_element                     @6
-  stumpless_destroy_entry                       @7
+
+; formerly stumpless_destroy_element, replaced in 3.0.0
+  stumpless_set_severity_color                  @6
+
+; formerly stumpless_destroy_entry, replaced in 3.0.0
+  stumpless_get_malloc                          @7
+
+; added in v 1.5.0 and earlier
   stumpless_destroy_param                       @8
   stumpless_get_current_target                  @9
   stumpless_get_error                           @10
@@ -212,13 +218,41 @@ EXPORTS
   stumpless_set_entry_hostname                  @197
 
 ; added in v2.2.0
-  stumpless_load_element                        @198
-  stumpless_load_entry                          @199
-  stumpless_load_entry_str                      @200
-  stumpless_load_param                          @201
+  stumpless_new_param_from_string               @198
+  stumpless_load_element                        @199
+  stumpless_load_entry                          @200
+  stumpless_load_entry_str                      @201
+  stumpless_load_param                          @202
   stumpless_unload_element_and_contents         @203
   stumpless_unload_element_only                 @204
   stumpless_unload_entry_and_contents           @205
   stumpless_unload_entry_only                   @206
   stumpless_unload_param                        @207
   vstumpless_load_entry                         @208
+  stumpless_prival_from_string                  @209
+  stumpless_get_severity_enum_from_buffer       @210
+  stumpless_get_facility_enum_from_buffer       @211
+  stumpless_close_sqlite3_target_and_db         @212
+  stumpless_close_sqlite3_target_only           @213
+  stumpless_create_default_sqlite3_table        @214
+  stumpless_get_sqlite3_db                      @215
+  stumpless_get_sqlite3_insert_sql              @216
+  stumpless_get_sqlite3_prepare                 @217
+  stumpless_open_sqlite3_target                 @218
+  stumpless_open_sqlite3_target_from_db         @219
+  stumpless_open_sqlite3_target_with_options    @220
+  stumpless_set_sqlite3_insert_sql              @221
+  stumpless_set_sqlite3_prepare                 @222
+  stumpless_sqlite3_prepare                     @223
+  stumpless_add_target_to_chain                 @224
+  stumpless_close_chain_and_contents            @225
+  stumpless_close_chain_only                    @226
+  stumpless_get_chain_length                    @227
+  stumpless_new_chain                           @228
+  stumpless_set_entry_message_str_w             @229
+  stumpless_get_prival_string                   @230
+
+; added in v3.0.0
+  stumpless_get_free                            @231
+  stumpless_get_realloc                         @232
+  stumpless_get_priority_string                 @233

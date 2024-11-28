@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 
+#include <string>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <gtest/gtest.h>
 #include <stumpless.h>
 #include "test/helper/assert.hpp"
+#include "test/helper/fixture.hpp"
 #include "test/helper/memory_allocation.hpp"
 
 namespace {
@@ -87,7 +89,6 @@ namespace {
   TEST_F( ParamTest, GetNameMemoryFailure ) {
     void * (*set_malloc_result)(size_t);
     const char *name;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -114,7 +115,6 @@ namespace {
   TEST_F( ParamTest, GetValueMemoryFailure ) {
     void * (*set_malloc_result)(size_t);
     const char *value;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -129,7 +129,6 @@ namespace {
 
   TEST_F( ParamTest, SetNameToNull ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_param_name( &basic_param, NULL );
     EXPECT_NULL( result );
@@ -140,7 +139,6 @@ namespace {
     void * (*set_malloc_result)(size_t);
     const char *new_value = "this-wont-work";
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
     const char *after_value;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
@@ -160,7 +158,6 @@ namespace {
 
   TEST_F( ParamTest, SetValueToNull ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_param_value( &basic_param, NULL );
     EXPECT_NULL( result );
@@ -174,7 +171,7 @@ namespace {
       format = stumpless_param_to_string( &basic_param );
       ASSERT_NOT_NULL( format );
 
-      EXPECT_STREQ( format, "<basic-name>:<basic-value>" );
+      EXPECT_STREQ( format, "basic-name=\"basic-value\"" );
       EXPECT_NO_ERROR;
 
       free( ( void * ) format );
@@ -182,7 +179,6 @@ namespace {
 
   TEST_F( ParamTest, ParamToStringMemoryFailure ) {
     void * (*set_malloc_result)(size_t);
-    const struct stumpless_error *error;
     const char *result;
     
     
@@ -204,7 +200,6 @@ namespace {
 
   TEST( CopyParamTest, NullParam ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_copy_param( NULL );
     EXPECT_NULL( result );
@@ -221,7 +216,6 @@ namespace {
 
   TEST( GetParamNameTest, NullParam ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_param_name( NULL );
     EXPECT_NULL( result );
@@ -232,7 +226,6 @@ namespace {
 
   TEST( GetParamValueTest, NullParam ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_param_value( NULL );
     EXPECT_NULL( result );
@@ -244,20 +237,13 @@ namespace {
   TEST( LoadParamTest, InvalidName ) {
     struct stumpless_param param;
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_load_param( &param, "par=am", "test-value" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_load_param( &param, "param]", "test-value" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_load_param( &param, "p\"aram", "test-value" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-    
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_load_param( &param, invalid_name.c_str(), "test-value" );
+      EXPECT_NULL( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
     stumpless_free_all(  );
   }
 
@@ -276,7 +262,6 @@ namespace {
   TEST( NewParamTest, MemoryFailure ) {
     void * (*set_malloc_result)(size_t);
     const struct stumpless_param *param;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -295,7 +280,6 @@ namespace {
     void * (*set_malloc_result)(size_t);
     const char *param_value = "this-value-is-awesome";
     const struct stumpless_param *param;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL_ON_SIZE( 22 ) );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -337,7 +321,6 @@ namespace {
 
   TEST( NewParamTest, NullName ) {
     struct stumpless_param *param;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( NULL, "test-value" );
     EXPECT_NULL( param );
@@ -348,26 +331,18 @@ namespace {
 
   TEST( NewParamTest, InvalidName ) {
     struct stumpless_param *param;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    param = stumpless_new_param( "par=am", "test-value" );
-    EXPECT_NULL( param );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    param = stumpless_new_param( "param]", "test-value" );
-    EXPECT_NULL( param );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    param = stumpless_new_param( "p\"aram", "test-value" );
-    EXPECT_NULL( param );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-    
+    for(const auto& invalid_name : invalid_names) {
+      param = stumpless_new_param( invalid_name.c_str(), "test-value" );
+      EXPECT_NULL( param );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
     stumpless_free_all(  );
   }
 
   TEST( NewParamTest, InvalidNameLength ) {
     struct stumpless_param *param;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( "very-long-name-abcdefghijklmnopqrstuvwxyz", "test-value" );
     EXPECT_NULL( param );
@@ -378,7 +353,6 @@ namespace {
 
   TEST( NewParamTest, NullValue ) {
     struct stumpless_param *param;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( "test-name", NULL );
     EXPECT_NULL( param );
@@ -387,7 +361,7 @@ namespace {
     stumpless_free_all(  );
   }
 
-  TEST( NewParamTest, ValidUTF8 ){
+  TEST( NewParamTest, ValidUTF8 ) {
     const struct stumpless_param *param;
     const char *name = "test-param-name";
     // U+2162 U+2264 U+0035(<Roman Numeral Three><Less-Than or Equal To>5)
@@ -412,9 +386,8 @@ namespace {
     stumpless_free_all(  );
   }
 
-  TEST( NewParamTest, InvalidUTF8 ){
+  TEST( NewParamTest, InvalidUTF8 ) {
     struct stumpless_param *param;
-    const struct stumpless_error *error;
     const char *name = "test-param-name";
 
     // invalid lead byte
@@ -465,7 +438,6 @@ namespace {
 
   TEST( SetName, NullParam ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_param_name( NULL, "new-name" );
     EXPECT_NULL( result );
@@ -477,7 +449,6 @@ namespace {
   TEST( SetName, InvalidName) {
     struct stumpless_param *param;
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( "param", "my-value" );
     ASSERT_NOT_NULL( param );
@@ -501,7 +472,6 @@ namespace {
   TEST( SetName, InvalidNameLength ) {
     struct stumpless_param *param;
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( "param", "test-value" );
 
@@ -542,7 +512,6 @@ namespace {
 
   TEST( SetValue, NullParam ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_param_value( NULL, "new-value" );
     EXPECT_NULL( result );
@@ -585,7 +554,6 @@ namespace {
     const char *original_value = "first-value";
     const char *retrieved_value;
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( "my-name", original_value );
     ASSERT_NOT_NULL( param );
@@ -616,7 +584,6 @@ namespace {
 
   TEST( ParamToStringTest, NullParam) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_param_to_string( NULL );
     EXPECT_NULL( result );
@@ -627,5 +594,101 @@ namespace {
     stumpless_unload_param( NULL );
 
     stumpless_free_all(  );
+  }
+
+  TEST( ParamFromStringTest, MallocFail ) {
+    void * ( *set_malloc_result )( size_t );
+    const struct stumpless_param *param;
+
+    set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
+    ASSERT_NOT_NULL( set_malloc_result );
+
+    param = stumpless_new_param_from_string( "param-name=\"param-value\"" );
+    EXPECT_NULL( param );
+    EXPECT_ERROR_ID_EQ( STUMPLESS_MEMORY_ALLOCATION_FAILURE );
+
+    set_malloc_result = stumpless_set_malloc( malloc );
+    EXPECT_TRUE( set_malloc_result == malloc );
+  }
+
+  TEST( ParamFromStringTest, MallocFailOnValue ) {
+    void * ( *set_malloc_result )( size_t );
+    const struct stumpless_param *param;
+
+    set_malloc_result = stumpless_set_malloc( MALLOC_FAIL_ON_SIZE( 12 ) );
+    ASSERT_NOT_NULL( set_malloc_result );
+
+    param = stumpless_new_param_from_string( "param-name=\"param-value\"" );
+    EXPECT_NULL( param );
+    EXPECT_ERROR_ID_EQ( STUMPLESS_MEMORY_ALLOCATION_FAILURE );
+
+    set_malloc_result = stumpless_set_malloc( malloc );
+    EXPECT_TRUE( set_malloc_result == malloc );
+  }
+
+  TEST( ParamFromStringTest, New ) {
+    struct stumpless_param *param;
+    const char *param_string = "test-param-name=\"test-param-value\"";
+
+    size_t name_length = strlen("test-param-name");
+    size_t value_length = strlen("test-param-value");
+
+    param = stumpless_new_param_from_string( param_string );
+    ASSERT_NOT_NULL( param );
+    EXPECT_NO_ERROR;
+
+    ASSERT_EQ( name_length, param->name_length );
+    ASSERT_NOT_NULL( param->name );
+    ASSERT_EQ( 0, memcmp( param->name, "test-param-name", name_length ) );
+
+    ASSERT_EQ( value_length, param->value_length );
+    ASSERT_NOT_NULL( param->value );
+    ASSERT_EQ( 0, memcmp( param->value, "test-param-value", value_length ) );
+
+    stumpless_destroy_param( param );
+
+    stumpless_free_all();
+  }
+
+  TEST( ParamFromStringTest, NullName ) {
+    struct stumpless_param *param;
+    
+    param = stumpless_new_param_from_string( NULL );
+    EXPECT_NULL( param );
+    EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
+
+    stumpless_free_all();
+  }
+
+  TEST( ParamFromStringTest, InvalidFormat ) {
+    std::vector<const char *> invalid_names = {
+      "param-na=me=\"param-value\"",
+      "param-name\"param-value\"",
+      "param]-name=\"param-value\"",
+      "p\"aram-name=\"param-value\"",
+      "param-name==\"param-value\"",
+      "param-name=\"param-value",
+      "param-name=\""
+    };
+    struct stumpless_param *param;
+
+    for( auto it = begin( invalid_names ); it != end( invalid_names ); ++it ){
+      param = stumpless_new_param_from_string( *it );
+      EXPECT_NULL( param );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_PARAM_STRING );
+    }
+
+    stumpless_free_all();
+  }
+
+  TEST( ParamFromStringTest, NameTooLong ) {
+    const char *str = "param-name-that-is-entirely-too-long=\"param-value\"";
+    struct stumpless_param *param;
+
+    param = stumpless_new_param_from_string( str );
+    EXPECT_NULL( param );
+    EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_TOO_BIG );
+
+    stumpless_free_all();
   }
 }

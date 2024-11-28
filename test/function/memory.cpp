@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2018-2020 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <stumpless.h>
+#include <stumpless/memory.h>
 #include "test/helper/assert.hpp"
+#include <stumpless/error.h>
 
 namespace {
 
@@ -42,7 +44,6 @@ namespace {
 
   TEST( SetFreeTest, NullFunction ) {
     void (*result)(void *);
-    const struct stumpless_error *error;
 
     result = stumpless_set_free( NULL );
     ASSERT_NULL( result );
@@ -51,7 +52,6 @@ namespace {
 
   TEST( SetMallocTest, NullFunction ) {
     void * (*result)(size_t);
-    const struct stumpless_error *error;
 
     result = stumpless_set_malloc( NULL );
     ASSERT_NULL( result );
@@ -60,11 +60,25 @@ namespace {
 
   TEST( SetReallocTest, NullFunction ) {
     void * (*result)(void *, size_t);
-    const struct stumpless_error *error;
 
     result = stumpless_set_realloc( NULL );
     ASSERT_NULL( result );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
+  }
+
+  TEST(MemoryFunctionsTest, GetMalloc) {
+    stumpless_set_malloc(malloc);
+    ASSERT_EQ(stumpless_get_malloc(), malloc);
+  }
+
+  TEST(MemoryFunctionsTest, GetRealloc) {
+    stumpless_set_realloc(realloc);
+    ASSERT_EQ(stumpless_get_realloc(), realloc);
+  }
+
+  TEST(MemoryFunctionsTest, GetFree) {
+    void (*current_free_function)(void*) = stumpless_get_free();
+    ASSERT_EQ(current_free_function, free);
   }
 
 }

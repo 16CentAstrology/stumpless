@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
  */
 
 #ifndef __STUMPLESS_ERROR_H
-#  define __STUMPLESS_ERROR_H
+#define __STUMPLESS_ERROR_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -126,8 +126,37 @@ extern "C" {
  *
  * @since release v2.1.0
  */\
-  ERROR( STUMPLESS_WINDOWS_FAILURE, 28 )
-
+  ERROR( STUMPLESS_WINDOWS_FAILURE, 28 ) \
+/**
+ * The format of the given string is incorrect.
+ *
+ * @since release v2.2.0
+ */\
+  ERROR( STUMPLESS_INVALID_PARAM_STRING, 29 ) \
+/**
+ * SQLite3 was busy and could not complete the request.
+ *
+ * @since release v2.2.0
+ */\
+  ERROR( STUMPLESS_SQLITE3_BUSY, 30 ) \
+/**
+ * A custom callback to a SQLite3 target failed.
+ *
+ * @since release v2.2.0
+ */\
+  ERROR( STUMPLESS_SQLITE3_CALLBACK_FAILURE, 31 ) \
+/**
+ * SQLite3 encountered a failure.
+ *
+ * @since release v2.2.0
+ */\
+  ERROR( STUMPLESS_SQLITE3_FAILURE, 32 ) \
+/**
+ * The network connection requested has been closed.
+ *
+ * @since release v2.2.0
+ */\
+  ERROR( STUMPLESS_NETWORK_CLOSED, 33 )
 
 /**
  * An (enum) identifier of the types of errors that might be encountered.
@@ -136,10 +165,11 @@ extern "C" {
  * different ultimate cause. To completely diagnose a problem, you will need
  * to look at more than just the error id.
  *
- * @note The real implementation of enum values is now moved under `STUMPLESS_FOREACH_ERROR(ERROR)` macro.
+ * See STUMPLESS_FOREACH_ERROR() and STUMPLESS_GENERATE_ENUM() for how this
+ * enumeration is generated.
  */
 enum stumpless_error_id {
-  STUMPLESS_FOREACH_ERROR(STUMPLESS_GENERATE_ENUM)
+  STUMPLESS_FOREACH_ERROR( STUMPLESS_GENERATE_ENUM )
 };
 
 
@@ -203,7 +233,7 @@ stumpless_get_error( void );
  * This function is safe to call from threads that may be asynchronously
  * cancelled.
  *
- * @since Release v1.5.0
+ * @since release v1.5.0
  *
  * @param err The error to get the id from. This must not be NULL.
  *
@@ -228,7 +258,7 @@ stumpless_get_error_id( const struct stumpless_error *err );
  * This function is safe to call from threads that may be asynchronously
  * cancelled.
  *
- * @since Release v1.6.0
+ * @since release v1.6.0
  *
  * @param id The error id to get the error string from.
  *

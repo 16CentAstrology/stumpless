@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2019-2021 Joel E. Anderson
+ * Copyright 2019-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 #include <stumpless.h>
+#include "test/helper/assert.hpp"
 
 namespace {
 
@@ -53,9 +54,48 @@ namespace {
     int result;
 
     #define CHECK_SEVERITY_ENUM( STRING, ENUM ) \
-      result = stumpless_get_severity_enum( #STRING ); \
+      result = stumpless_get_severity_enum( #STRING + 19 ); \
       EXPECT_EQ( result, ENUM );
     STUMPLESS_FOREACH_SEVERITY( CHECK_SEVERITY_ENUM )
+  }
+
+  TEST( GetSeverityEnum, LowercaseValidSeverity ) {
+    int result;
+
+    result = stumpless_get_severity_enum( "emerg" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_EMERG );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "alert" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_ALERT );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "crit" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_CRIT );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "err" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_ERR );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "warning" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_WARNING );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "notice" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_NOTICE );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "info" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_INFO );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "debug" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_DEBUG );
+    EXPECT_NO_ERROR;
+    // deprecated
+    result = stumpless_get_severity_enum( "panic" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_EMERG );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "error" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_ERR );
+    EXPECT_NO_ERROR;
+    result = stumpless_get_severity_enum( "warn" );
+    EXPECT_EQ( result, STUMPLESS_SEVERITY_WARNING );
+    EXPECT_NO_ERROR;
   }
 
   TEST( GetSeverityEnum, NoSuchSeverity ) {
@@ -65,5 +105,36 @@ namespace {
     result = stumpless_get_severity_enum( "an_invalid_severity" );
     EXPECT_EQ( result, -1 );
   }
+
+  TEST( GetSeverityEnumFromBuffer, NoSuchSeverity ) {
+    int result;
+
+    result = stumpless_get_severity_enum_from_buffer( "an_invalid_severity", 10 );
+    EXPECT_EQ( result, -1 );
+  }
+
+  TEST( GetSeverityEnumFromBuffer, IncompleteSeverity ) {
+    enum stumpless_severity result = stumpless_get_severity_enum( "war" );
+    EXPECT_EQ( result, -1 );
+    
+    result = stumpless_get_severity_enum( "not" );
+    EXPECT_EQ( result, -1 );
+  }	
+
+
+  TEST( GetSeverityEnumFromBuffer, OverextendedSeverity ) {
+    enum stumpless_severity result = stumpless_get_severity_enum( "warnings are neat" );
+    EXPECT_EQ( result, -1 );
+    
+    result = stumpless_get_severity_enum( "notices are bad" );
+    EXPECT_EQ( result, -1 );
+
+    result = stumpless_get_severity_enum( "panic you should not" );
+    EXPECT_EQ( result, -1 );
+
+  }	
+
+
+
 
 }

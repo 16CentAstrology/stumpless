@@ -22,10 +22,9 @@
 #include <stumpless/element.h>
 #include <stumpless/param.h>
 #include "private/config.h"
-#include "private/config/locale/wrapper.h"
+#include "private/config/wrapper/locale.h"
 #include "private/config/wrapper/journald.h"
 #include "private/config/wrapper/thread_safety.h"
-#include "private/deprecate.h"
 #include "private/element.h"
 #include "private/error.h"
 #include "private/memory.h"
@@ -56,18 +55,13 @@ struct stumpless_element *
 stumpless_add_param( struct stumpless_element *element,
                      struct stumpless_param *param ) {
   struct stumpless_param **new_params;
-  size_t old_params_size;
-  size_t new_params_size;
 
   VALIDATE_ARG_NOT_NULL( element );
   VALIDATE_ARG_NOT_NULL( param );
 
   lock_element( element );
 
-  old_params_size = sizeof( param ) * element->param_count;
-  new_params_size = old_params_size + sizeof( param );
-
-  new_params = realloc_mem( element->params, new_params_size );
+  new_params = realloc_array( element->params, element->param_count + 1, sizeof( struct stumpless_param * ) );
   if( !new_params ) {
     unlock_element( element );
     return NULL;
@@ -94,7 +88,7 @@ stumpless_copy_element( const struct stumpless_element *element ) {
     goto fail;
   }
 
-  copy->params = alloc_mem( element->param_count * sizeof( param_copy ) );
+  copy->params = alloc_array( element->param_count, sizeof( param_copy ) );
   if( !copy->params ) {
     goto fail_param_copy;
   }
@@ -117,18 +111,6 @@ fail_param_copy:
 fail:
   unlock_element( element );
   return NULL;
-}
-
-void
-stumpless_destroy_element( const struct stumpless_element *element ) {
-  warn_of_deprecation( "stumpless_destroy_element has been deprecated in favor "
-                       "of the more descriptive and deliberate "
-                       "stumpless_destroy_element_and_contents and "
-                       "stumpless_destroy_element_only functions in order to "
-                       "avoid unintentional memory leaks and use-after-free "
-                       "mistakes" );
-
-  stumpless_destroy_element_and_contents( element );
 }
 
 void
@@ -194,8 +176,11 @@ stumpless_element_to_string( const struct stumpless_element *element ) {
     const char *name;
     size_t name_len;
     size_t format_len;
+    const char **params_format;
+    size_t i;
     size_t param_count;
     struct stumpless_param **params;
+    size_t pos_offset;
 
     VALIDATE_ARG_NOT_NULL( element );
 
@@ -209,8 +194,8 @@ stumpless_element_to_string( const struct stumpless_element *element ) {
     // acc total format size
     format_len = name_len;
 
-    const char **params_format = alloc_mem(sizeof(char*) * param_count);
-    for( size_t i = 0; i < param_count; i++ ) {
+    params_format = alloc_array( param_count, sizeof(char*) );
+    for( i = 0; i < param_count; i++ ) {
       params_format[i] = stumpless_param_to_string(params[i]);
       // does not count '\0' on purpose
       format_len += strlen(params_format[i]);
@@ -218,7 +203,7 @@ stumpless_element_to_string( const struct stumpless_element *element ) {
 
     if( param_count != 0 ) {
       // extra param list chars and commas
-      format_len += 6 + param_count - 1;
+      format_len += 4 + param_count ;
     } else {
       // no params, just name
       format_len += 3;
@@ -229,11 +214,11 @@ stumpless_element_to_string( const struct stumpless_element *element ) {
       goto fail;
     }
 
-    memcpy( format + 1, name, name_len );
+    memcpy( format, name, name_len );
 
     // build params list "param_1_to_string,param_2_to_string, ..."
-    size_t pos_offset = name_len + 4;
-    for( size_t i = 0; i < param_count; i++) {
+    pos_offset = name_len + 2;
+    for( i = 0; i < param_count; i++) {
       // replace '\0' with ',' at the end of each string
       memcpy( format + pos_offset, params_format[i], strlen(params_format[i]));
       pos_offset += strlen(params_format[i]);
@@ -246,17 +231,14 @@ stumpless_element_to_string( const struct stumpless_element *element ) {
 
     unlock_element( element );
 
-    format[0] = '<';
-    format[name_len + 1] = '>';
-
     if (param_count != 0 ) {
-      // <name>:[param_1_to_string,param_2_to_string,etc.] (with params)
-      format[name_len + 2] = ':';
-      format[name_len + 3] = '[';
+      // name=[param_1_to_string,param_2_to_string,etc.] (with params)
+      format[name_len ] = '=';
+      format[name_len + 1] = '[';
       format[pos_offset] = ']';
     } else {
-      // <name> (no params)
-      // pos_offset is name_len + 4 here
+      // name (no params)
+      // pos_offset is name_len + 2 here
       pos_offset -= 3;
     }
 

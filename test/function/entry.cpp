@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2018-2023 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
+#include <string>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stumpless.h>
 #include "test/helper/assert.hpp"
 #include "test/helper/fixture.hpp"
@@ -64,6 +65,7 @@ namespace {
       const char *param_1_1_name = "basic-param";
       const char *param_1_1_value = "basic-value";
       struct stumpless_param *param_1_1 = NULL;
+      struct stumpless_entry *nil_entry = NULL;
 
       virtual void
       SetUp( void ) {
@@ -81,11 +83,16 @@ namespace {
 
         element_2 = stumpless_new_element( element_2_name );
         stumpless_add_element( basic_entry, element_2 );
+
+        nil_entry = create_nil_entry();
+
+        
       }
 
       virtual void
       TearDown( void ){
         stumpless_destroy_entry_and_contents( basic_entry );
+        stumpless_destroy_entry_only( nil_entry );
         stumpless_free_all(  );
       }
   };
@@ -109,7 +116,6 @@ namespace {
     struct stumpless_element *duplicate_element;
     size_t original_element_count;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     original_element_count = basic_entry->element_count;
 
@@ -128,7 +134,6 @@ namespace {
   TEST_F( EntryTest, AddElementMemoryFailure ) {
     struct stumpless_entry *entry;
     struct stumpless_element *element;
-    const struct stumpless_error *error;
     void * (*set_realloc_result)(void *, size_t);
 
     element = stumpless_new_element( "test-memory-failure" );
@@ -163,7 +168,6 @@ namespace {
 
   TEST_F( EntryTest, AddNewElementNullName ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_add_new_element( basic_entry, NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -172,7 +176,6 @@ namespace {
 
   TEST_F( EntryTest, InvalidNameLength ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_add_new_param_to_entry( basic_entry,
                                                "checking-valid-elemant-name-length",
@@ -223,7 +226,6 @@ namespace {
   TEST_F( EntryTest, AddNewParamAndNewElementMallocFailure ) {
     void * (*set_malloc_result)(size_t);
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -242,7 +244,6 @@ namespace {
   TEST_F( EntryTest, AddNewParamMallocFailure ) {
     void * (*set_malloc_result)(size_t);
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -260,7 +261,6 @@ namespace {
 
   TEST_F( EntryTest, AddNewParamNullElementName ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_add_new_param_to_entry( basic_entry,
                                                NULL,
@@ -272,7 +272,6 @@ namespace {
 
   TEST_F( EntryTest, AddNullElement ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_add_element( basic_entry, NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -316,7 +315,6 @@ namespace {
   TEST_F( EntryTest, CopyMallocFailure ) {
     void * (*set_malloc_result)(size_t);
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -334,7 +332,6 @@ namespace {
     void * ( *fail )( size_t );
     void * ( *set_malloc_result )( size_t );
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     fail = MALLOC_FAIL_ON_SIZE( sizeof( struct stumpless_element * ) * 2 );
     set_malloc_result = stumpless_set_malloc( fail );
@@ -352,7 +349,6 @@ namespace {
     void * ( *fail )( size_t );
     void * ( *set_malloc_result )( size_t );
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     fail = MALLOC_FAIL_ON_SIZE( 12 );
     set_malloc_result = stumpless_set_malloc( fail );
@@ -366,9 +362,9 @@ namespace {
     EXPECT_TRUE( set_malloc_result == malloc );
   }
 
+
   TEST_F( EntryTest, CopyReallocFailure ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
     void * (*set_realloc_result)(void *, size_t);
 
     set_realloc_result = stumpless_set_realloc( REALLOC_FAIL );
@@ -402,7 +398,6 @@ namespace {
   TEST_F( EntryTest, GetAppNameMallocFailure ) {
     void * (*set_malloc_result)(size_t);
     const char *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -425,11 +420,10 @@ namespace {
 
   TEST_F( EntryTest, GetElementByIndexOutOfBounds ) {
     const struct stumpless_element *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_by_index( basic_entry, 534 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 534 );
+    EXPECT_EQ( stumpless_get_error()->code, 534 );
     EXPECT_NULL( result );
   }
 
@@ -443,7 +437,6 @@ namespace {
 
   TEST_F( EntryTest, GetElementByNameNotFound ) {
     const struct stumpless_element *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_by_name( basic_entry, "not-found" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ELEMENT_NOT_FOUND );
@@ -452,7 +445,6 @@ namespace {
 
   TEST_F( EntryTest, GetElementByNameNullName ) {
     const struct stumpless_element *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_by_name( basic_entry, NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -477,7 +469,6 @@ namespace {
 
   TEST_F( EntryTest, GetElementIndexNotFound ) {
     size_t result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_index( basic_entry, "not-found" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ELEMENT_NOT_FOUND );
@@ -486,7 +477,6 @@ namespace {
 
   TEST_F( EntryTest, GetElementIndexNullName ) {
     size_t result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_index( basic_entry, NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -506,7 +496,6 @@ namespace {
   TEST_F( EntryTest, GetMessageMallocFailure ) {
     void * (*set_malloc_result)(size_t);
     const char *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -533,7 +522,6 @@ namespace {
   TEST_F( EntryTest, GetMsgidMallocFailure ) {
     void * (*set_malloc_result)(size_t);
     const char *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -546,6 +534,14 @@ namespace {
     EXPECT_TRUE( set_malloc_result == malloc );
   }
 
+  TEST_F( EntryTest, GetNullMessage ) {
+    const char *message;
+
+    message = stumpless_get_entry_message( nil_entry );
+    EXPECT_NULL( message );
+    EXPECT_NO_ERROR;
+  }
+
   TEST_F( EntryTest, GetParamByIndex ) {
     const struct stumpless_param *result;
 
@@ -556,11 +552,10 @@ namespace {
 
   TEST_F( EntryTest, GetParamByIndexElementIndexOutOfBounds ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_by_index( basic_entry, 766, 0 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 766 );
+    EXPECT_EQ( stumpless_get_error()->code, 766 );
     EXPECT_NULL( result );
   }
 
@@ -576,7 +571,6 @@ namespace {
 
   TEST_F( EntryTest, GetParamByNameNotFound ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_by_name( basic_entry,
                                                 "not-present",
@@ -587,7 +581,6 @@ namespace {
 
   TEST_F( EntryTest, GetParamByNameNullElementName ) {
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_by_name( basic_entry, NULL, "p-name" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -596,7 +589,6 @@ namespace {
 
   TEST_F( EntryTest, GetParamByNameNullParamName ) {
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_by_name( basic_entry, "e-name", NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -605,36 +597,24 @@ namespace {
 
   TEST_F( EntryTest, GetParamByNameInvalidParamName ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_get_entry_param_by_name( basic_entry, "e-name", "par=am" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_by_name( basic_entry, "e-name", "par]am" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_by_name( basic_entry, "e-name", "par\"am" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_get_entry_param_by_name( basic_entry, "e-name", invalid_name.c_str() );
+      EXPECT_NULL( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, GetParamByNameInvalidElementName ) {
     const struct stumpless_param *result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_get_entry_param_by_name( basic_entry, "ele=ment", "param" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_by_name( basic_entry, "ele]ment", "param" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_by_name( basic_entry, "e-name\"", "param" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_get_entry_param_by_name( basic_entry, invalid_name.c_str(), "param" );
+      EXPECT_NULL( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, GetParamValueByIndex ) {
@@ -649,11 +629,10 @@ namespace {
 
   TEST_F( EntryTest, GetParamValueByIndexElementIndexOutOfBounds ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_value_by_index( basic_entry, 455, 0 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 455 );
+    EXPECT_EQ( stumpless_get_error()->code, 455 );
     EXPECT_NULL( result );
   }
 
@@ -671,7 +650,6 @@ namespace {
 
   TEST_F( EntryTest, GetParamValueByNameNotFound ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_value_by_name( basic_entry,
                                                       "not-present",
@@ -682,7 +660,6 @@ namespace {
 
   TEST_F( EntryTest, GetParamValueByNameNullElementName ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_value_by_name( basic_entry,
                                                       NULL,
@@ -693,7 +670,6 @@ namespace {
 
   TEST_F( EntryTest, GetParamValueByNameNullParamName ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_value_by_name( basic_entry,
                                                       "e-name",
@@ -704,36 +680,24 @@ namespace {
 
   TEST_F( EntryTest, GetParamValueByNameInvalidParamName ) {
     const char *result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_get_entry_param_value_by_name( basic_entry, "e-name", "par=am" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_value_by_name( basic_entry, "e-name", "par]am" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_value_by_name( basic_entry, "e-name", "par\"am" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_get_entry_param_value_by_name( basic_entry, "e-name", invalid_name.c_str() );
+      EXPECT_NULL( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, GetParamValueByNameInvalidElementName ) {
     const char *result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_get_entry_param_value_by_name( basic_entry, "e=name", "param" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_value_by_name( basic_entry, "e]name", "param" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_entry_param_value_by_name( basic_entry, "\"e-name", "param" );
-    EXPECT_NULL( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_get_entry_param_value_by_name( basic_entry, invalid_name.c_str(), "param" );
+      EXPECT_NULL( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, HasElement ) {
@@ -754,7 +718,6 @@ namespace {
 
   TEST_F( EntryTest, HasElementNullName ) {
     bool result;
-    const struct stumpless_error *error;
 
     result = stumpless_entry_has_element( basic_entry, NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -763,53 +726,35 @@ namespace {
 
   TEST_F( EntryTest, HasElementInvalidName ) {
     bool result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_entry_has_element( basic_entry, "ele=ment" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_entry_has_element( basic_entry, "ele]ment" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_entry_has_element( basic_entry, "element\"" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_entry_has_element( basic_entry, invalid_name.c_str() );
+      EXPECT_FALSE( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, GetElementInvalidName ) {
     bool result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_get_element_by_name( basic_entry, "ele=ment" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_element_by_name( basic_entry, "ele]ment" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_element_by_name( basic_entry, "element\"" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_get_element_by_name( basic_entry, invalid_name.c_str() );
+      EXPECT_FALSE( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, GetElementIdxInvalidName ) {
     bool result;
-    const struct stumpless_error *error;
+    std::vector<std::string> invalid_names = load_corpus_folder("invalid_param_name");
 
-    result = stumpless_get_element_index( basic_entry, "ele=ment" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_element_index( basic_entry, "ele]ment" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
-
-    result = stumpless_get_element_index( basic_entry, "element\"" );
-    EXPECT_FALSE( result );
-    EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    for(const auto& invalid_name : invalid_names) {
+      result = stumpless_get_element_index( basic_entry, invalid_name.c_str() );
+      EXPECT_FALSE( result );
+      EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_ENCODING );
+    }
   }
 
   TEST_F( EntryTest, SetAppName ) {
@@ -881,7 +826,6 @@ namespace {
     struct stumpless_element *new_element;
     const struct stumpless_element *previous_element;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     new_element = stumpless_new_element( element_1_name );
     ASSERT_NOT_NULL( new_element );
@@ -901,7 +845,6 @@ namespace {
     struct stumpless_element *new_element;
     const struct stumpless_element *previous_element;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     new_element = stumpless_new_element( "new-element" );
     ASSERT_NOT_NULL( new_element );
@@ -910,7 +853,7 @@ namespace {
 
     result = stumpless_set_element( basic_entry, 200, new_element );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 200 );
+    EXPECT_EQ( stumpless_get_error()->code, 200 );
     EXPECT_NULL( result );
     EXPECT_EQ( stumpless_get_element_by_index( basic_entry, 0 ),
                previous_element );
@@ -920,7 +863,6 @@ namespace {
 
   TEST_F( EntryTest, SetElementNullElement ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_element( basic_entry, 0, NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -942,14 +884,13 @@ namespace {
   TEST_F( EntryTest, SetFacilityInvalidFacility ) {
     int previous_facility;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     previous_facility = stumpless_get_entry_facility( basic_entry );
 
     result = stumpless_set_entry_facility( basic_entry,
                                            ( enum stumpless_facility ) -66 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_FACILITY );
-    EXPECT_EQ( error->code, -66 );
+    EXPECT_EQ( stumpless_get_error()->code, -66 );
     EXPECT_NULL( result );
     EXPECT_EQ( stumpless_get_entry_facility( basic_entry ), previous_facility );
   }
@@ -1001,7 +942,6 @@ namespace {
   }
 
   TEST_F( EntryTest, MsgidRejected ) {
-    const struct stumpless_error* error;
     struct stumpless_entry* entry;
 
     entry = stumpless_new_entry_str( STUMPLESS_FACILITY_USER,
@@ -1015,7 +955,6 @@ namespace {
   }
 
   TEST_F( EntryTest, MsgidFormatRejected ) {
-    const struct stumpless_error* error;
     struct stumpless_entry* entry;
 
     entry = stumpless_new_entry_str( STUMPLESS_FACILITY_USER,
@@ -1030,7 +969,6 @@ namespace {
 
   TEST_F( EntryTest, SetMsgidRejected ) {
     const struct stumpless_entry* result;
-    const struct stumpless_error* error;
 
     result = stumpless_set_entry_msgid( basic_entry, "gonna-fail-because-length-exceeded-max-allowed" );
 
@@ -1039,7 +977,6 @@ namespace {
 
   TEST_F( EntryTest, SetMsgidFormatRejected ) {
     const struct stumpless_entry* result;
-    const struct stumpless_error* error;
 
     result = stumpless_set_entry_msgid( basic_entry, "test-msgid-wro\ng-format" );
 
@@ -1048,7 +985,6 @@ namespace {
 
   TEST_F( EntryTest, SetAppNameRejectedLen ) {
      const struct stumpless_entry* result;
-     const struct stumpless_error* error;
 
     result = stumpless_set_entry_app_name( basic_entry, "it-is-gonna-fail-because-length-exceeded-max-allowed" );
 
@@ -1057,7 +993,6 @@ namespace {
 
   TEST_F( EntryTest, SetAppNameRejectedFormat ) {
      const struct stumpless_entry* result;
-     const struct stumpless_error* error;
 
     result = stumpless_set_entry_app_name( basic_entry, "test-appname-wro\ng-format" );
 
@@ -1065,7 +1000,6 @@ namespace {
   }
 
   TEST_F( EntryTest, AppNameRejected ) {
-      const struct stumpless_error* error;
       struct stumpless_entry* entry;
 
       entry = stumpless_new_entry_str( STUMPLESS_FACILITY_USER,
@@ -1100,7 +1034,6 @@ namespace {
   TEST_F( EntryTest, SetParamElementIndexOutOfBounds ) {
     struct stumpless_param *new_param;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     new_param = stumpless_new_param( "new-param", "new-value" );
     ASSERT_NOT_NULL( new_param );
@@ -1110,7 +1043,7 @@ namespace {
                                                  0,
                                                  new_param );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 455 );
+    EXPECT_EQ( stumpless_get_error()->code, 455 );
     EXPECT_NULL( result );
 
     stumpless_destroy_param( new_param );
@@ -1119,7 +1052,6 @@ namespace {
   TEST_F( EntryTest, SetParamParamIndexOutOfBounds ) {
     struct stumpless_param *new_param;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     new_param = stumpless_new_param( "new-param", "new-value" );
     ASSERT_NOT_NULL( new_param );
@@ -1129,7 +1061,7 @@ namespace {
                                                  566,
                                                  new_param );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 566 );
+    EXPECT_EQ( stumpless_get_error()->code, 566 );
     EXPECT_NULL( result );
 
     stumpless_destroy_param( new_param );
@@ -1153,27 +1085,25 @@ namespace {
 
   TEST_F( EntryTest, SetParamValueByIndexElementIndexOutOfBounds ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_param_value_by_index( basic_entry,
                                                        5666,
                                                        0,
                                                        "new-value" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 5666 );
+    EXPECT_EQ( stumpless_get_error()->code, 5666 );
     EXPECT_NULL( result );
   }
 
   TEST_F( EntryTest, SetParamValueByIndexParamIndexOutOfBounds ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_param_value_by_index( basic_entry,
                                                        0,
                                                        666,
                                                        "new-value" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INDEX_OUT_OF_BOUNDS );
-    EXPECT_EQ( error->code, 666 );
+    EXPECT_EQ( stumpless_get_error()->code, 666 );
     EXPECT_NULL( result );
   }
 
@@ -1195,7 +1125,6 @@ namespace {
 
   TEST_F( EntryTest, SetParamValueByNameNullElementName ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_param_value_by_name( basic_entry,
                                                       NULL,
@@ -1230,7 +1159,6 @@ namespace {
   TEST_F( EntryTest, SetParamValueByNameElementNameNotFoundMallocFailure ) {
     void *(*set_malloc_result)(size_t);
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -1249,7 +1177,6 @@ namespace {
   TEST_F( EntryTest, SetParamValueByNameElementNameNotFoundMallocFailureOnParamValue ) {
     void *(*set_malloc_result)(size_t);
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL_ON_SIZE( 17 ) );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -1268,7 +1195,6 @@ namespace {
   TEST_F( EntryTest, SetParamValueByNameElementNameNotFoundReallocFailure ) {
     void * (*set_realloc_result)(void *, size_t);
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_realloc_result = stumpless_set_realloc( REALLOC_FAIL );
     ASSERT_NOT_NULL( set_realloc_result );
@@ -1299,7 +1225,6 @@ namespace {
   TEST_F( EntryTest, SetPriorityInvalidFacility ) {
     int previous_prival;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     previous_prival = stumpless_get_entry_prival( basic_entry );
 
@@ -1307,7 +1232,7 @@ namespace {
                                            ( enum stumpless_facility ) -66,
                                            STUMPLESS_SEVERITY_EMERG );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_FACILITY );
-    EXPECT_EQ( error->code, -66 );
+    EXPECT_EQ( stumpless_get_error()->code, -66 );
     EXPECT_NULL( result );
     EXPECT_EQ( stumpless_get_entry_prival( basic_entry ), previous_prival );
   }
@@ -1315,7 +1240,6 @@ namespace {
   TEST_F( EntryTest, SetPriorityInvalidSeverity ) {
     int previous_prival;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     previous_prival = stumpless_get_entry_prival( basic_entry );
 
@@ -1323,7 +1247,7 @@ namespace {
                                            STUMPLESS_FACILITY_LOCAL5,
                                            ( enum stumpless_severity ) -66 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_SEVERITY );
-    EXPECT_EQ( error->code, -66 );
+    EXPECT_EQ( stumpless_get_error()->code, -66 );
     EXPECT_NULL( result );
     EXPECT_EQ( stumpless_get_entry_prival( basic_entry ), previous_prival );
   }
@@ -1354,21 +1278,19 @@ namespace {
   TEST_F( EntryTest, SetSeverityInvalidSeverity ) {
     int previous_severity;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     previous_severity = stumpless_get_entry_severity( basic_entry );
 
     result = stumpless_set_entry_severity( basic_entry,
                                            ( enum stumpless_severity ) -66 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_INVALID_SEVERITY );
-    EXPECT_EQ( error->code, -66 );
+    EXPECT_EQ( stumpless_get_error()->code, -66 );
     EXPECT_NULL( result );
     EXPECT_EQ( stumpless_get_entry_severity( basic_entry ), previous_severity );
   }
 
     TEST_F( EntryTest, AppNameFormatRejected ) {
     struct stumpless_entry *bad_stump;
-    const struct stumpless_error *error;
 
     bad_stump = stumpless_new_entry_str( STUMPLESS_FACILITY_USER,
                                          STUMPLESS_SEVERITY_INFO,
@@ -1386,7 +1308,6 @@ namespace {
   TEST( AddElementTest, NullEntry ){
     struct stumpless_entry *entry;
     struct stumpless_element *element;
-    const struct stumpless_error *error;
 
     element = stumpless_new_element( "test-new-element" );
     EXPECT_NO_ERROR;
@@ -1403,7 +1324,6 @@ namespace {
 
   TEST( AddNewParam, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_add_new_param_to_entry( NULL,
                                                "new-element-name",
@@ -1417,7 +1337,6 @@ namespace {
 
   TEST( CopyEntry, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_copy_entry( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1463,7 +1382,6 @@ namespace {
 
   TEST( GetElementByIndexTest, NullEntry ) {
     const struct stumpless_element *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_by_index( NULL, 0 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1474,7 +1392,6 @@ namespace {
 
   TEST( GetElementByNameTest, NullEntry ) {
     const struct stumpless_element *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_by_name( NULL, "irrelevant" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1485,7 +1402,6 @@ namespace {
 
   TEST( GetElementCount, NullEntry ) {
     size_t result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_count( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1496,7 +1412,6 @@ namespace {
 
   TEST( GetElementIndex, NullEntry ) {
     size_t result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_element_index( NULL, "irrelevant" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1507,7 +1422,6 @@ namespace {
 
   TEST( GetAppName, NullEntry ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_app_name( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1518,7 +1432,6 @@ namespace {
 
   TEST( GetFacilityTest, NullEntry ) {
     int result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_facility( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1529,7 +1442,6 @@ namespace {
 
   TEST( GetMessage, NullEntry ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_message( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1540,7 +1452,6 @@ namespace {
 
   TEST( GetMsgid, NullEntry ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_msgid( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1551,7 +1462,6 @@ namespace {
 
   TEST( GetParamByIndexTest, NullEntry ) {
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_by_index( NULL, 0, 0 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1562,7 +1472,6 @@ namespace {
 
   TEST( GetParamByNameTest, NullEntry ) {
     struct stumpless_param *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_by_name( NULL, "e-name", "p-name" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1573,7 +1482,6 @@ namespace {
 
   TEST( GetParamValueByIndexTest, NullEntry ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_value_by_index( NULL, 0, 0 );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1584,7 +1492,6 @@ namespace {
 
   TEST( GetParamValueByNameTest, NullEntry ) {
     const char *result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_param_value_by_name( NULL,
                                                       "e-name",
@@ -1597,7 +1504,6 @@ namespace {
 
   TEST( GetPrivalTest, NullEntry ) {
     int result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_prival( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1608,7 +1514,6 @@ namespace {
 
   TEST( GetSeverityTest, NullEntry ) {
     int result;
-    const struct stumpless_error *error;
 
     result = stumpless_get_entry_severity( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1619,7 +1524,6 @@ namespace {
 
   TEST( HasElementTest, NullEntry ) {
     bool result;
-    const struct stumpless_error *error;
 
     result = stumpless_entry_has_element( NULL, "irrelevant" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -1665,7 +1569,6 @@ namespace {
     struct stumpless_entry entry;
     const char *app_name = "test-app-name-错误";
     const char *msgid = "test-msgid";
-    const struct stumpless_error *error;
     const struct stumpless_entry *result;
 
     result = stumpless_load_entry( &entry,
@@ -1685,7 +1588,6 @@ namespace {
     struct stumpless_entry entry;
     const char *app_name = "test-app-name-错误";
     const char *msgid = "test-msgid";
-    const struct stumpless_error *error;
     const struct stumpless_entry *result;
 
     result = stumpless_load_entry_str( &entry,
@@ -1708,7 +1610,6 @@ namespace {
     const char *msgid = "test-msgid";
     const char *message = "nice and long to make sure it beats the first";
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     set_malloc_result = stumpless_set_malloc( MALLOC_FAIL_ON_SIZE( 46 ) );
     ASSERT_NOT_NULL( set_malloc_result );
@@ -1805,7 +1706,7 @@ namespace {
     stumpless_free_all(  );
   }
 
-  TEST( NewEntryStrTest, New ){
+  TEST( NewEntryStrTest, New ) {
     struct stumpless_entry *entry;
     const char *app_name = "test-app-name";
     const char *msgid = "test-msgid";
@@ -1931,6 +1832,48 @@ namespace {
     stumpless_free_all(  );
   }
 
+  TEST(NewEntryTest, MallocFailureAfterCacheFill) {
+    struct stumpless_entry *entries[2000];
+    size_t i,j;
+    const char *app_name = "test-app-name";
+    const char *msgid = "test-msgid";
+    void *(*set_malloc_result)(size_t);
+
+    // create an entry to initialize the cache
+    entries[0] = stumpless_new_entry( STUMPLESS_FACILITY_USER,
+                                      STUMPLESS_SEVERITY_INFO,
+                                      app_name,
+                                      msgid,
+                                      NULL );
+    EXPECT_NOT_NULL(entries[0]);
+
+    set_malloc_result = stumpless_set_malloc(MALLOC_FAIL);
+    ASSERT_NOT_NULL(set_malloc_result);
+
+    for (i = 1; i < 2000; i++) {
+      entries[i] = stumpless_new_entry( STUMPLESS_FACILITY_USER,
+                                        STUMPLESS_SEVERITY_INFO,
+                                        app_name,
+                                        msgid,
+                                        NULL );
+
+      if (!entries[i]) {
+        EXPECT_ERROR_ID_EQ(STUMPLESS_MEMORY_ALLOCATION_FAILURE);
+        break;
+      }
+    }
+
+    EXPECT_NE(i, 2000);
+
+    set_malloc_result = stumpless_set_malloc(malloc);
+    EXPECT_TRUE(set_malloc_result == malloc);
+
+    for (j = 0; j < i; j++) {
+        stumpless_destroy_entry_and_contents(entries[j]);
+    }
+    stumpless_free_all();
+  }
+
   TEST( NewEntryTest, MallocFailureOnMsgid ) {
     void *(*set_malloc_result)(size_t);
     const char *app_name = "test-app-name";
@@ -1984,7 +1927,6 @@ namespace {
   TEST( NewEntryTest, MallocFailureOnSecond ) {
     struct stumpless_entry *first_entry;
     struct stumpless_entry *second_entry;
-    const struct stumpless_error *error;
     const char *app_name = "test-app-name";
     const char *msgid = "test-msgid";
     const char *message = "test-message";
@@ -2133,7 +2075,6 @@ namespace {
 
   TEST( NewEntryTest, ReallocFailureOnSecond ) {
     struct stumpless_entry *entries[2000];
-    const struct stumpless_error *error;
     const char *app_name = "test-app-name";
     const char *msgid = "test-msgid";
     const char *message = "test-message";
@@ -2180,7 +2121,6 @@ namespace {
 
   TEST( SetAppNameTest, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_app_name( NULL, "new-app-name" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2192,7 +2132,6 @@ namespace {
   TEST( SetElementTest, NullEntry ) {
     struct stumpless_element *new_element;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     new_element = stumpless_new_element( "new-element" );
     ASSERT_NOT_NULL( new_element );
@@ -2208,7 +2147,6 @@ namespace {
 
   TEST( SetFacilityTest, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_facility( NULL, STUMPLESS_FACILITY_USER );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2219,7 +2157,6 @@ namespace {
 
   TEST( SetMsgidTest, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_msgid( NULL, "new-app-name" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2230,7 +2167,6 @@ namespace {
 
   TEST( SetMessageTest, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_message( NULL, "test-message" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2318,7 +2254,6 @@ namespace {
     struct stumpless_entry *entry;
     const char *new_message = "nice and long to make sure it beats the first";
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     entry = create_empty_entry(  );
     ASSERT_NOT_NULL( entry );
@@ -2339,7 +2274,6 @@ namespace {
 
   TEST( SetMessageStrTest, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_message_str( NULL, "test-message" );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2395,10 +2329,132 @@ namespace {
     stumpless_free_all(  );
   }
 
+    TEST( SetMessageWideStrTest, AsciiMessage ) {
+    struct stumpless_entry *entry;
+    const wchar_t *wide_ascii_message = L"ASCII Message";
+    const char *ascii_message = "ASCII Message";
+    const struct stumpless_entry *result;
+    const char *new_message;
+
+    entry = create_empty_entry();
+    ASSERT_NOT_NULL( entry );
+
+    result = stumpless_set_entry_message_str_w( entry, wide_ascii_message );
+    EXPECT_EQ( entry, result );
+    EXPECT_NO_ERROR;
+
+    new_message = stumpless_get_entry_message( entry );
+    EXPECT_NOT_NULL( new_message );
+    EXPECT_NO_ERROR;
+    EXPECT_STREQ( ascii_message, new_message );
+
+    free( ( void * ) new_message );
+    stumpless_destroy_entry_and_contents( entry );
+    stumpless_free_all();
+  }
+
+  TEST( SetMessageWideStrTest, LongAsciiMessage ) {
+    struct stumpless_entry *entry;
+    const char *long_message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.Proin porta, sem quis imperdiet aliquam, lectus odio consequat elit, at ullamcorper felis urna vel leo. Ut vitae risus cursus, tempor risus sed, elementum risus. Vestibulum porta egestas libero et lacinia.";
+    const wchar_t *wide_long_message = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit.Proin porta, sem quis imperdiet aliquam, lectus odio consequat elit, at ullamcorper felis urna vel leo. Ut vitae risus cursus, tempor risus sed, elementum risus. Vestibulum porta egestas libero et lacinia.";
+    const struct stumpless_entry *result;
+    const char *new_message;
+
+    entry = create_empty_entry();
+    ASSERT_NOT_NULL( entry );
+
+    result = stumpless_set_entry_message_str_w( entry, wide_long_message );
+    EXPECT_EQ( entry, result );
+    EXPECT_NO_ERROR;
+
+    new_message = stumpless_get_entry_message( entry );
+    EXPECT_NOT_NULL( new_message );
+    EXPECT_NO_ERROR;
+    EXPECT_STREQ( long_message, new_message );
+    free( ( void * ) new_message );
+    stumpless_destroy_entry_and_contents( entry );
+    stumpless_free_all();
+  }
+
+  TEST( SetMessageWideStrTest, MallocFailureOnMessage ) {
+    void * (*set_malloc_result)(size_t);
+    struct stumpless_entry *entry;
+    const wchar_t *new_message = L"nice and long to make sure it beats the first";
+    const struct stumpless_entry *result;
+
+    entry = create_empty_entry(  );
+    ASSERT_NOT_NULL( entry );
+
+    set_malloc_result = stumpless_set_malloc( MALLOC_FAIL_ON_SIZE( 46 ) );
+    ASSERT_NOT_NULL( set_malloc_result );
+
+    result = stumpless_set_entry_message_str_w( entry, new_message );
+    EXPECT_ERROR_ID_EQ( STUMPLESS_MEMORY_ALLOCATION_FAILURE );
+    EXPECT_NULL( result );
+
+    set_malloc_result = stumpless_set_malloc( malloc );
+    EXPECT_TRUE( set_malloc_result == malloc );
+
+    stumpless_destroy_entry_and_contents( entry );
+    stumpless_free_all();
+  }
+
+  TEST( SetMessageWideStrTest, NullEntry ) {
+    const struct stumpless_entry *result;
+
+    result = stumpless_set_entry_message_str_w( NULL, L"test-message" );
+    EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
+    EXPECT_NULL( result );
+
+    stumpless_free_all();
+  }
+
+  TEST( SetMessageWideStrTest, NullMessage ) {
+    struct stumpless_entry *entry;
+    const struct stumpless_entry *result;
+
+    entry = create_empty_entry();
+    EXPECT_NO_ERROR;
+    EXPECT_NOT_NULL( entry );
+
+    result = stumpless_set_entry_message_str_w( entry, NULL );
+    EXPECT_NO_ERROR;
+    EXPECT_EQ( entry, result );
+
+    EXPECT_NULL( entry->message );
+    EXPECT_EQ( 0, entry->message_length );
+
+    stumpless_destroy_entry_and_contents( entry );
+    stumpless_free_all();
+  }
+
+  TEST( SetMessageWideStrTest, WideMessage ) {
+    struct stumpless_entry *entry;
+    const struct stumpless_entry *result;
+    const wchar_t *wide_message= L"message";
+    const char *utf8_message = "message";
+    const char *new_message;
+
+    entry = create_empty_entry();
+    ASSERT_NOT_NULL( entry );
+
+    result = stumpless_set_entry_message_str_w( entry, wide_message );
+    EXPECT_EQ( entry, result );
+    EXPECT_NO_ERROR;
+
+    new_message = stumpless_get_entry_message( entry );
+    EXPECT_NOT_NULL( new_message );
+    EXPECT_NO_ERROR;
+    EXPECT_STREQ( new_message, utf8_message );
+
+    free( ( void * ) new_message );
+    stumpless_destroy_entry_and_contents( entry );
+    stumpless_free_all();
+  }
+
   TEST( SetParam, NullEntry ) {
     struct stumpless_param *param;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     param = stumpless_new_param( "param-name", "param-value" );
     ASSERT_NOT_NULL( param );
@@ -2414,7 +2470,6 @@ namespace {
 
   TEST( SetParamValueByIndex, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_param_value_by_index( NULL,
                                                        0,
@@ -2428,7 +2483,6 @@ namespace {
 
   TEST( SetParamValueByName, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_param_value_by_name( NULL,
                                                       "element-name",
@@ -2443,7 +2497,6 @@ namespace {
   TEST( SetPrivalTest, NullEntry ) {
     int prival = STUMPLESS_FACILITY_USER | STUMPLESS_SEVERITY_INFO;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_prival( NULL, prival );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2454,7 +2507,6 @@ namespace {
 
   TEST( SetSeverityTest, NullEntry ) {
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_severity( NULL, STUMPLESS_SEVERITY_INFO );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
@@ -2466,10 +2518,10 @@ namespace {
   TEST( AddParamTest, ParamNameTooLong ){
     struct stumpless_entry *entry;
     struct stumpless_entry *result;
-    const struct stumpless_error *error;
     const char *app_name = "test-app-name";
     const char *msgid = "test-msgid";
     const char *message = "test-message";
+    const char *param_name = "very-long-name-abcdefghijklmnopqrstuvwxyz";
 
     entry = stumpless_new_entry( STUMPLESS_FACILITY_USER,
                                  STUMPLESS_SEVERITY_INFO,
@@ -2478,9 +2530,9 @@ namespace {
                                  message );
 
     result = stumpless_add_new_param_to_entry( entry,
-					       "new-element-name",
-					       "very-long-name-abcdefghijklmnopqrstuvwxyz",
-					       "test-value" );
+                                               "new-element-name",
+                                               param_name,
+                                               "test-value" );
     EXPECT_NULL( result );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_TOO_BIG );
 
@@ -2537,7 +2589,6 @@ namespace {
   }
 
   TEST( GetProcid, NullEntry ) {
-    const struct stumpless_error *error;
     const char *procid;
 
     procid = stumpless_get_entry_procid( NULL );
@@ -2591,7 +2642,6 @@ namespace {
 
   TEST( SetProcid, NullEntry ) {
     struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_procid( NULL, NULL );
 
@@ -2604,7 +2654,6 @@ namespace {
   TEST( SetProcid, ProcidTooLong ) {
     struct stumpless_entry *entry;
     const struct stumpless_entry *result;
-    const struct stumpless_error *error;
     const char *procid = "test-procid-"
                          "abcdefghijklmnopqrstuvwxy"
                          "-abcdefghijklmnopqrstuvwxy"
@@ -2627,7 +2676,6 @@ namespace {
   TEST( SetProcid, ProcidNotPrintable ) {
     struct stumpless_entry *entry;
     struct stumpless_entry *result;
-    const struct stumpless_error *error;
     const char *app_name = "test-app-name";
     const char *msgid = "test-msgid";
     const char *message = "test-message";
@@ -2770,7 +2818,6 @@ namespace {
 
   TEST( SetHostName, NullEntry ) {
     struct stumpless_entry *result;
-    const struct stumpless_error *error;
 
     result = stumpless_set_entry_hostname( NULL, NULL );
 
@@ -2783,7 +2830,6 @@ namespace {
   TEST( SetHostName, HostNameTooLong ) {
     struct stumpless_entry *entry;
     struct stumpless_entry *result;
-    const struct stumpless_error *error;
     const char *hostname = "test-hostname"
                          "-abcdefghijklmnopqrstuvwxy"
                          "-abcdefghijklmnopqrstuvwxy"
@@ -2811,7 +2857,6 @@ namespace {
   TEST( SetHostName, HostNameNotPrintable ) {
     struct stumpless_entry *entry;
     struct stumpless_entry *result;
-    const struct stumpless_error *error;
     const char *hostname = "test-procid-\x01";
 
     entry = create_entry(  );
@@ -2849,16 +2894,34 @@ namespace {
   }
 
   TEST( UnloadEntryAndContents, NullEntry ) {
-    const struct stumpless_error *error;
-
     stumpless_unload_entry_and_contents( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
   }
 
   TEST( UnloadEntryOnly, NullEntry ) {
-    const struct stumpless_error *error;
-
     stumpless_unload_entry_only( NULL );
     EXPECT_ERROR_ID_EQ( STUMPLESS_ARGUMENT_EMPTY );
   }
+
+  TEST( CopyEntry, MallocFailureOnSizeOverflow ) {
+    const struct stumpless_entry *result;
+    struct stumpless_entry *large_entry = NULL;
+	size_t large_entry_ec;
+
+    large_entry = stumpless_new_entry_str( STUMPLESS_FACILITY_USER,
+			STUMPLESS_SEVERITY_INFO,
+			"large-app-name",
+			"large-msgid",
+			"large message" );
+	large_entry_ec = large_entry->element_count;
+	large_entry->element_count = SIZE_MAX;
+
+	result = stumpless_copy_entry( large_entry );
+	EXPECT_NULL( result );
+	EXPECT_ERROR_ID_EQ( STUMPLESS_MEMORY_ALLOCATION_FAILURE );
+
+    large_entry->element_count = large_entry_ec;
+    stumpless_destroy_entry_and_contents(large_entry);
+  }
+
 }

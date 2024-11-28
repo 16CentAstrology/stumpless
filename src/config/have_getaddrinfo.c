@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2023 Joel E. Anderson
+ * Copyright 2023-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,10 @@
 #include <errno.h>
 #include <netdb.h>
 #include <stddef.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include "private/config/have_getaddrinfo.h"
-#include "private/config/locale/wrapper.h"
+#include "private/config/wrapper/locale.h"
 #include "private/error.h"
 
 int

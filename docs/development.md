@@ -8,11 +8,10 @@ Stumpless is configured using the popular [CMake](https://cmake.org/) build
 platform. In order to build it from the source you will need this tool
 available, as well as any of a number of supported build systems.
 [GNU Make](https://www.gnu.org/software/make/) is one of the most well-known
-ones, and so most if not all examples you will find in stumpless
-documentation use it. If you prefer to use something else, there is plenty of
-support for CMake in other build systems. For example, Visual Studio has CMake
-support built in so that you can build targets in a CMake project easily within
-the IDE itself.
+ones, and many examples you will find online use it. If you prefer to use
+something else, there is plenty of support for CMake in other build systems.
+For example, Visual Studio has CMake support built in so that you can build
+targets in a CMake project easily within the IDE itself.
 
 The `CMakeLists.txt` file contains the build specification for stumpless, and is
 worth browsing through if you are curious about where configuration checks,
@@ -179,8 +178,8 @@ First, always make sure that you have documented your function, especially if it
 is public facing. Stumpless uses [doxygen](https://www.doxygen.nl/index.html) to
 generate its documentation from the header files. You can use the `docs` build
 target to generate them, provided that doxygen was installed when you ran cmake.
-Be sure to an include an `@since` tag with the current version of the library
-under work, so that it is clearn when it was introduced.
+Be sure to include an `@since` tag with the current version (the project version
+at the top of `CMakeLists.txt`) so that when it was introduced is clear.
 
 As you look at other functions, you will see that each function documents its
 thread and async safety attributes in addition to its functionality. There is
@@ -204,6 +203,11 @@ add it to the `.def` file so that the DLL will include it. Failing to do so
 will result in tests failing on Windows builds with a note that your new
 function is not defined. The Windows CI builds typically catch this issue.
 
+Finally, be sure that you've added your new function to the appropriate header
+check tool YAML file. To find out what that is, see the next section below!
+
+
+## Header Checks
 Stumpless uses a custom tool to make sure that all required headers are included
 in a source file without any extras. The tool is called `check_headers` and is
 stored in the `tools/check_headers` folder. You can run this manually if you
@@ -315,13 +319,13 @@ cmake -DGTEST_PATH=../gtest -DBENCHMARK_PATH=../benchmark ../stumpless
 
 # in this build Google Test and Benchmark will be downloaded and built since
 # the paths we provided don't have anything in them
-make check
-make bench
+cmake --build . --target check
+cmake --build . --target bench
 
 # to build the libraries and put them in the path for future builds, we just
 # execute these two targets:
-make export-gtest
-make export-benchmark
+cmake --build . --target export-gtest
+cmake --build . --target export-benchmark
 
 # these list commands show that the folders are now populated!
 ls ../gtest
@@ -344,13 +348,29 @@ cmake -DGTEST_PATH=../gtest -DBENCHMARK_PATH=../benchmark ../stumpless
 # running the test suite or benchmark suite won't download the libraries this
 # time - it will go straight to compiling the tests and linking them against
 # the libraries in the PATH variables
-make check
-make bench
+cmake --build . --target check
+cmake --build . --target bench
 ```
 
 
-## Other development notes
-For a detailed discussion of the performance testing framework used to gauge
-the speed and efficiency of various calls, check out the
-[benchmark](benchmark.md) documentation for the basic strategy and a full
-walkthrough of an example.
+## Common Mistakes
+The project team sees a few types of issues happen more commonly than others.
+Here are a few tips that will help you get your contribution accepted faster by
+avoiding some back-and-forth change requests.
+ * **Forgetting to run header checks**
+   By far, missing headers are the most common cause of CI failure in new
+   contributions. Taking the extra time to run the
+   [header checks](#header-checks) locally before you open a pull request can
+   make the difference between a pull request being accepted and changes being
+   requested.
+ * **Force Pushing**
+   It's common (and expected) for changes to be requested on contributions. When
+   this happens, the best thing you can do is address these in a single commit
+   and push the new commit to your pull request branch. This makes it easy to
+   follow what changes were made, and speeds up the review process. While it
+   might seem cleaner to amend or squash your changes into a single new commit
+   and force-push it, please don't do this! It means that the entire
+   contribution must be reviewed again, and can make it harder to track comments
+   on individual lines of the commit. Most contributions are squashed into a
+   single commit when they are accepted, so never fear: the project team will
+   make sure that the end result of your hard work will be clean and neat!

@@ -1,31 +1,33 @@
-list(APPEND STUMPLESS_SOURCES src/target/network.c)
+list(APPEND STUMPLESS_SOURCES ${PROJECT_SOURCE_DIR}/src/target/network.c)
 list(APPEND WRAPTURE_SPECS ${PROJECT_SOURCE_DIR}/tools/wrapture/network_target.yml)
 
 if(HAVE_SYS_SOCKET_H)
-  list(APPEND STUMPLESS_SOURCES src/config/have_sys_socket.c)
+  list(APPEND STUMPLESS_SOURCES ${PROJECT_SOURCE_DIR}/src/config/have_sys_socket.c)
   set(HAVE_WINSOCK2_H FALSE)
 
   if(HAVE_GETADDRINFO)
-    list(APPEND STUMPLESS_SOURCES src/config/have_getaddrinfo.c)
+    list(APPEND STUMPLESS_SOURCES ${PROJECT_SOURCE_DIR}/src/config/have_getaddrinfo.c)
   elseif(HAVE_GETHOSTBYNAME2 OR HAVE_GETHOSTBYNAME)
     set(SUPPORT_GETHOSTBYNAME TRUE)
-    list(APPEND STUMPLESS_SOURCES src/config/gethostbyname_supported.c)
+    list(APPEND STUMPLESS_SOURCES ${PROJECT_SOURCE_DIR}/src/config/gethostbyname_supported.c)
   endif()
 elseif(HAVE_WINSOCK2_H)
-  list(APPEND STUMPLESS_SOURCES src/config/have_winsock2.c)
+  list(APPEND STUMPLESS_SOURCES ${PROJECT_SOURCE_DIR}/src/config/have_winsock2.c)
   find_library(WINSOCK2 NAMES Ws2_32)
 endif()
 
-install(FILES
-  ${PROJECT_SOURCE_DIR}/include/stumpless/target/network.h
-  DESTINATION "include/stumpless/target"
-)
+if(INSTALL_HEADERS)
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/include/stumpless/target/network.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/stumpless/target"
+  )
+endif()
 
-list(APPEND DOXYGEN_MANPAGES ${PROJECT_BINARY_DIR}/docs/man/man3/network.h.3)
+list(APPEND DOXYGEN_MANPAGES ${PROJECT_BINARY_DIR}/docs/${STUMPLESS_LANGUAGE}/man/man3/network.h.3)
 
 if(INCLUDE_MANPAGES_IN_INSTALL)
   install(FILES
-    ${PROJECT_BINARY_DIR}/docs/man/man3/network.h.3
+    ${PROJECT_BINARY_DIR}/docs/${STUMPLESS_LANGUAGE}/man/man3/network.h.3
     RENAME stumpless_target_network.h.3
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man3
   )

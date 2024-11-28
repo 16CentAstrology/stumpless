@@ -4,17 +4,58 @@ All notable changes to stumpless will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
 For a detailed look at the project's future, including planned features and bug
 fixes, check out the
 [roadmap](https://github.com/goatshriek/stumpless/blob/master/docs/roadmap.md).
 
 
-## [2.2.0] - 2023-08-08
+## [3.0.0] - 2024-11-28
+### Added
+ - Colorization of output in stream targets via ANSI color codes, along with
+   supporting functions `stumpless_set_severity_color`.
+ - Memory allocation function accessors:
+    * `stumpless_get_free`
+    * `stumpless_get_malloc`
+    * `stumpless_get_realloc`
+ - Other new functions:
+    * `stumpless_get_priority_string`
+
+### Fixed
+ - Strings that are a case-insensitive prefix of a valid severity string are
+   no longer accepted by severity from string functions.
+ - Memory leak in slab cache expansion.
+ - Use `SO_NOSIGPIPE` where `MSG_NOSIGNAL` is not defined.
+
+### Removed
+ - `stumpless/priority.h`, which was merged into `stumpless/prival.h`.
+
+
+## [2.2.0] - 2024-05-26
+### Added 
+ - @since format check enforcement in CI pipeline.
+ - `single-file` target for rollup `.c` and `.h` files.
+ - SQLite3 logging targets.
+ - Target chains.
+ - Support for `pkg-config`.
+ - `INSTALL_HEADERS` and `INSTALL_HTML` build options.
+ - Localizations for:
+    * Albanian (sq-AL :albania:)
+    * Danish (da-DK :denmark:)
+    * Hebrew (he-IL :israel:)
+    * Hungarian (hu-HU :hungary:)
+    * Japanese (ja-JP :jp:)
+    * Sinhala (si-LK :sri_lanka_:)
+    * Swahili (sw-KE :kenya:)
+    * Teluga (te-IN :india:)
+    * Turkish (tr-TR :tr:)
+
 ### Fixed
  - Deadlock potential in `stumpless_set_entry_hostname` and
    `stumpless_set_entry_procid` when validation fails.
  - Builds in ANSI C environments.
+ - `sys/socket.h`-based TCP network targets will immediately fail with an error
+   if the remote end sends a FIN message, instead of waiting for `send` to fail,
+   possibly sending messages that are not actually received by the remote end.
 
 
 ## [2.1.0] - 2022-11-13

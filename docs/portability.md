@@ -42,7 +42,7 @@ certain target types are support is also available, for example if the
 `STUMPLESS_SOCKET_TARGETS_SUPPORTED` symbol is defined, then Unix sockets are
 available in this build. A complete list of the symbols in this header can be
 found in the
-[documentation](https://goatshriek.github.io/stumpless/docs/c/latest/config_8h.html).
+[documentation](https://goatshriek.github.io/stumpless/docs/c/latest/).
 
 However, this header does not include information needed to make some internal
 code decisions. For example, the public header will not indicate whether a
@@ -133,7 +133,7 @@ rather than in the config directory.
 ## Other Wrapper Headers
 There are other wrapper headers that hide configuration-related details beyond
 `private/config/wrapper.h`. The most prominent of these is
-`private/config/locale/wrapper.h` which includes the correct set of localized
+`private/config/wrapper/locale.h` which includes the correct set of localized
 string definitions based on the locale chosen during the build configuration.
 Another example is `private/windows_wrapper.h` which includes Windows-related
 header files only if they are found and in the correct order.

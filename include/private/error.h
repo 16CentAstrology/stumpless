@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2023 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
  */
 
 #ifndef __STUMPLESS_PRIVATE_ERROR_H
-#  define __STUMPLESS_PRIVATE_ERROR_H
+#define __STUMPLESS_PRIVATE_ERROR_H
 
-#  include <stddef.h>
-#  include <stumpless/error.h>
-#  include "private/config.h"
+#include <stddef.h>
+#include <stumpless/error.h>
+#include "private/config.h"
 
 void
 clear_error( void );
@@ -147,6 +147,10 @@ raise_invalid_id( void );
 
 COLD_FUNCTION
 void
+raise_invalid_param( void );
+
+COLD_FUNCTION
+void
 raise_invalid_severity( int severity );
 
 COLD_FUNCTION
@@ -177,6 +181,28 @@ raise_mb_conversion_failure( int code );
 COLD_FUNCTION
 void
 raise_memory_allocation_failure( void );
+
+/**
+ * Raises an error indicating a network connection is closed.
+ *
+ * **Thread Safety: MT-Safe**
+ * This function is thread safe.
+ *
+ * **Async Signal Safety: AS-Unsafe**
+ * This function is not safe to call from signal handlers due to the use of
+ * a thread-global structure to store the error.
+ *
+ * **Async Cancel Safety: AC-Unsafe**
+ * This function is not safe to call from threads that may be asynchronously
+ * cancelled, due to the use of a thread-global structure to store the error.
+ *
+ * @since release v2.2.0
+ *
+ * @param message The message to assign to the error.
+ */
+COLD_FUNCTION
+void
+raise_network_closed( const char *message );
 
 COLD_FUNCTION
 void
@@ -230,6 +256,50 @@ void
 raise_socket_send_failure( const char *message,
                            int code,
                            const char *code_type );
+
+/**
+ * Raises a STUMPESS_SQLITE3_BUSY error.
+ *
+ * **Thread Safety: MT-Safe**
+ * This function is thread safe.
+ *
+ * **Async Signal Safety: AS-Unsafe**
+ * This function is not safe to call from signal handlers due to the use of
+ * a thread-global structure to store the error.
+ *
+ * **Async Cancel Safety: AC-Unsafe**
+ * This function is not safe to call from threads that may be asynchronously
+ * cancelled, due to the use of a thread-global structure to store the error.
+ *
+ * @since release v2.2.0
+ */
+COLD_FUNCTION
+void
+raise_sqlite3_busy( void );
+
+/**
+ * Raises a STUMPESS_SQLITE3_FAILURE error.
+ *
+ * **Thread Safety: MT-Safe**
+ * This function is thread safe.
+ *
+ * **Async Signal Safety: AS-Unsafe**
+ * This function is not safe to call from signal handlers due to the use of
+ * a thread-global structure to store the error.
+ *
+ * **Async Cancel Safety: AC-Unsafe**
+ * This function is not safe to call from threads that may be asynchronously
+ * cancelled, due to the use of a thread-global structure to store the error.
+ *
+ * @since release v2.2.0
+ *
+ * @param message A localized description of the failure.
+ *
+ * @param code The error code from the failed SQLite3 call.
+ */
+COLD_FUNCTION
+void
+raise_sqlite3_failure( const char *message, int code );
 
 COLD_FUNCTION
 void
@@ -313,7 +383,7 @@ raise_windows_failure( const char *message, int code, const char *code_type );
  * cancelled, as the lock used to control access to the error stream may not
  * be released after a cancellation.
  *
- * @since v2.1.0.
+ * @since release v2.1.0.
  *
  * @param msg The message to be written to the error stream.
  *

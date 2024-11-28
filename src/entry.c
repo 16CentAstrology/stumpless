@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,17 +27,18 @@
 #include <stumpless/severity.h>
 #include "private/cache.h"
 #include "private/config.h"
-#include "private/config/locale/wrapper.h"
+#include "private/config/wrapper/locale.h"
 #include "private/config/wrapper/format_string.h"
 #include "private/config/wrapper/gethostname.h"
 #include "private/config/wrapper/getpid.h"
 #include "private/config/wrapper/thread_safety.h"
 #include "private/config/wrapper/wel.h"
-#include "private/deprecate.h"
+#include "private/config/wrapper/wstring.h"
 #include "private/element.h"
 #include "private/entry.h"
 #include "private/error.h"
 #include "private/facility.h"
+#include "private/prival.h"
 #include "private/severity.h"
 #include "private/strbuilder.h"
 #include "private/strhelper.h"
@@ -155,9 +156,10 @@ stumpless_copy_entry( const struct stumpless_entry *entry ) {
     goto cleanup_and_fail;
   }
 
-  copy->elements = alloc_mem( entry->element_count * sizeof( element_copy ) );
+  copy->elements = alloc_array( entry->element_count, sizeof( element_copy ) );
   if( !copy->elements ) {
-    goto fail_elements;
+    unchecked_destroy_entry( copy );
+    goto cleanup_and_fail;
   }
 
   for( i = 0; i < entry->element_count; i++ ){
@@ -184,18 +186,6 @@ fail_elements:
 cleanup_and_fail:
   unlock_entry( entry );
   return NULL;
-}
-
-void
-stumpless_destroy_entry( const struct stumpless_entry *entry ) {
-  warn_of_deprecation( "stumpless_destroy_entry has been deprecated in favor "
-                       "of the more descriptive and deliberate "
-                       "stumpless_destroy_entry_and_contents and "
-                       "stumpless_destroy_entry_only functions in order to "
-                       "avoid unintentional memory leaks and use-after-free "
-                       "mistakes" );
-
-  stumpless_destroy_entry_and_contents( entry );
 }
 
 void
@@ -412,11 +402,15 @@ stumpless_get_entry_message( const struct stumpless_entry *entry ) {
   VALIDATE_ARG_NOT_NULL( entry );
 
   lock_entry( entry );
-  message_copy = alloc_mem( entry->message_length + 1 );
-  if( !message_copy ) {
-    goto cleanup_and_return;
+  if( !entry->message ) {
+    message_copy = NULL;
+  } else {
+    message_copy = alloc_mem( entry->message_length + 1 );
+    if( !message_copy ) {
+      goto cleanup_and_return;
+    }
+    memcpy( message_copy, entry->message, entry->message_length + 1 );
   }
-  memcpy( message_copy, entry->message, entry->message_length + 1 );
   clear_error(  );
 
 cleanup_and_return:
@@ -869,6 +863,39 @@ stumpless_set_entry_message_str( struct stumpless_entry *entry,
 }
 
 struct stumpless_entry *
+stumpless_set_entry_message_str_w( struct stumpless_entry *entry,
+                                   const wchar_t *message ){
+  char *new_message;
+  int new_message_size;
+  const char *old_message;
+
+  VALIDATE_ARG_NOT_NULL( entry );
+
+  if( message ){
+    new_message = config_copy_wstring_to_cstring( message, &new_message_size );
+    if( !new_message ){
+      return NULL;
+    }
+    new_message_size--; // leave off the NULL character
+
+  } else {
+    new_message = NULL;
+    new_message_size = 0;
+  }
+
+  lock_entry( entry );
+  old_message = entry->message;
+  entry->message = new_message;
+  entry->message_length = new_message_size;
+  unlock_entry( entry );
+
+  free_mem( old_message );
+  clear_error();
+
+  return entry;
+}
+
+struct stumpless_entry *
 stumpless_set_entry_param_by_index( struct stumpless_entry *entry,
                                     size_t element_index,
                                     size_t param_index,
@@ -1182,12 +1209,6 @@ entry_free_all( void ) {
   entry_cache = NULL;
 }
 
-int
-get_prival( enum stumpless_facility facility,
-            enum stumpless_severity severity ) {
-  return facility | severity;
-}
-
 void
 lock_entry( const struct stumpless_entry *entry ) {
   config_lock_mutex( entry->mutex );
@@ -1235,7 +1256,7 @@ locked_get_element_by_index( const struct stumpless_entry *entry,
 struct stumpless_element *
 locked_get_element_by_name( const struct stumpless_entry *entry,
                             const char *name ) {
-  int i;
+  size_t i;
   struct stumpless_element *element;
   int cmp_result;
 

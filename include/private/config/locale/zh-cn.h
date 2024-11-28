@@ -1,26 +1,26 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
-* Copyright 2020-2022 Joel E. Anderson
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2020-2022 Joel E. Anderson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /* Warning: This Language Docmention use translate with robot. Please
-* help us to keep them can read.
-* For Chinese Users(对中文用户):
-* 警告：这个语言文档是机翻的。请帮助我们保持他们可读。
-*/
+ * help us to keep them readable.
+ * For Chinese Users(对中文用户):
+ * 警告：这个语言文档是机翻的。请帮助我们保持他们可读。
+ */
 
 #ifndef __STUMPLESS_PRIVATE_CONFIG_LOCALE_ZH_CN_H
 #  define __STUMPLESS_PRIVATE_CONFIG_LOCALE_ZH_CN_H
@@ -30,6 +30,10 @@
 
 #  define L10N_BUFFER_TOO_SMALL_ERROR_MESSAGE \
 "缓冲区对于给定消息太小"
+
+// todo translate
+#  define L10N_CHAIN_TARGETS_UNSUPPORTED \
+"chain targets are not supported by this build"
 
 #  define L10N_CLOSE_UNSUPPORTED_TARGET_ERROR_MESSAGE \
 "试图关闭不受支持的目标类型"
@@ -112,6 +116,10 @@
 #  define L10N_INVALID_MULTI_SZ_ERROR_MESSAGE \
 "MULTI_SZ注册表值既不为空，也不以两个NULL字符结束"
 
+// todo translate
+#  define L10N_INVALID_PARAM_ERROR_MESSAGE \
+"the string is not of the name=\"value\" format"
+
 #  define L10N_INVALID_SEVERITY_ERROR_CODE_TYPE \
 "severity无效"
 
@@ -155,6 +163,10 @@
 // todo translate
 #  define L10N_NAME_RESOLUTION_FAILED_ERROR_MESSAGE \
 "gethostbyname[2] and inet_pton failed to resolve the name"
+
+// todo translate
+#  define L10N_NETWORK_CLOSED_ERROR_MESSAGE \
+"the network connection is closed"
 
 #  define L10N_NETWORK_PROTOCOL_UNSUPPORTED_ERROR_MESSAGE \
 "所选网络协议不受支持"
@@ -201,11 +213,55 @@ ARG_NAME "是空的"
 #  define L10N_SEND_WIN_SOCKET_FAILED_ERROR_MESSAGE \
 "sendfailed带有winsock2 socket"
 
+// todo translate
+#  define L10N_SEVERITY_COLORS_UNSUPPORTED_TARGET_ERROR_MESSAGE \
+"severity colors are only supported for stream targets"
+
 #  define L10N_SOCKET_FAILED_ERROR_MESSAGE \
 "无法打开套接字"
 
 #  define L10N_SOURCE_REGISTRATION_TRANSACTION_DESCRIPTION_W \
 L"Windows事件日志源的无障碍注册"
+
+// todo translate
+#  define L10N_SQLITE3_BIND_FAILED_ERROR_MESSAGE( PARAM )  \
+"could not bind " PARAM " to the statement"
+
+// todo translate
+#  define L10N_SQLITE3_BUSY_ERROR_MESSAGE \
+"the database was busy and could not complete the transaction"
+
+// todo translate
+#  define L10N_SQLITE3_CLOSE_FAILED_ERROR_MESSAGE \
+"could not close the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_CUSTOM_PREPARE_FAILED_ERROR_MESSAGE \
+"a custom callback for prepared statements failed"
+
+// todo translate
+#  define L10N_SQLITE3_OPEN_FAILED_ERROR_MESSAGE \
+"could not open the sqlite3 database"
+
+// todo translate
+#  define L10N_SQLITE3_PREPARE_FAILED_ERROR_MESSAGE \
+"sqlite3_prepare_v2 failed"
+
+// todo translate
+#  define L10N_SQLITE3_RESULT_CODE_TYPE \
+"the return code of the failed sqlite3 call"
+
+// todo translate
+#  define L10N_SQLITE3_RETRY_COUNT_CODE_TYPE \
+"the number of times the operation was retried"
+
+// todo translate
+#  define L10N_SQLITE3_STEP_FAILED_ERROR_MESSAGE \
+"sqlite3_step failed"
+
+// todo translate
+#  define L10N_SQLITE3_TARGETS_UNSUPPORTED \
+"sqlite3 targets are not supported by this build"
 
 #  define L10N_STREAM_WRITE_FAILURE_ERROR_MESSAGE \
 "无法写入流"

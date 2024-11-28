@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Copyright 2018-2022 Joel E. Anderson
+ * Copyright 2018-2024 Joel E. Anderson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,10 @@ struct stumpless_entry {
   char app_name[STUMPLESS_MAX_APP_NAME_LENGTH + 1];
 /** The length of the app name, without the NULL terminator. */
   size_t app_name_length;
-/** The message of this entry, as a NULL-terminated string. */
+/**
+ * The message of this entry, as a NULL-terminated string. This may be NULL
+ * if the entry does not have a message set.
+ */
   char *message;
 /** The length of the message in bytes, without the NULL terminator. */
   size_t message_length;
@@ -261,34 +264,6 @@ stumpless_add_new_param_to_entry( struct stumpless_entry *entry,
 STUMPLESS_PUBLIC_FUNCTION
 struct stumpless_entry *
 stumpless_copy_entry( const struct stumpless_entry *entry );
-
-/**
- * An alias for stumpless_destroy_entry_and_contents.
- *
- * **Thread Safety: MT-Unsafe**
- * This function is not thread safe as it destroys resources that other threads
- * would use if they tried to reference this struct.
- *
- * **Async Signal Safety: AS-Unsafe lock heap**
- * This function is not safe to call from signal handlers due to the destruction
- * of a lock that may be in use as well as the use of the memory deallocation
- * function to release memory.
- *
- * **Async Cancel Safety: AC-Unsafe lock heap**
- * This function is not safe to call from threads that may be asynchronously
- * cancelled, as the cleanup of the lock may not be completed, and the memory
- * deallocation function may not be AC-Safe itself.
- *
- * @deprecated This function has been deprecated in favor of the more
- * descriptive and deliberate stumpless_destroy_entry_and_contents and
- * stumpless_destroy_entry_only functions in order to avoid unintentional
- * memory leaks and use-after-free mistakes.
- *
- * @param entry The entry to destroy.
- */
-STUMPLESS_PUBLIC_FUNCTION
-void
-stumpless_destroy_entry( const struct stumpless_entry *entry );
 
 /**
  * Destroys an entry as well as all elements and params that it contains,
@@ -589,6 +564,10 @@ stumpless_get_entry_hostname( const struct stumpless_entry *entry );
  * Note that if this message was originally set using format specifiers, the
  * result will have them substituted, instead of the original placeholders.
  *
+ * It is also important to note that the message may be NULL if the entry
+ * does not have one. This differs from other fields like the app id or msgid,
+ * which will be an RFC 5424 NILVALUE '-' if they have not been set.
+ *
  * In versions prior to v2.0.0, the returned pointer was to the internal buffer
  * used to store the name and was not to be modified by the caller. This
  * behavior changed in v2.0.0 in order to avoid thread safety issues.
@@ -611,9 +590,8 @@ stumpless_get_entry_hostname( const struct stumpless_entry *entry );
  *
  * @param entry The entry to get the message of.
  *
- * @return The message of the entry if no error is encountered. If an error
- * was encountered, then NULL is returned and an error code is set
- * appropriately.
+ * @return The message of the entry (which may be NULL). If an error was
+ * encountered, then NULL is returned and an error code is set appropriately.
  */
 STUMPLESS_PUBLIC_FUNCTION
 const char *
@@ -953,7 +931,9 @@ stumpless_load_entry( struct stumpless_entry *entry,
  * This function has the same behavior as stumpless_load_entry_str, except it
  * does not create a new entry, instead loading an existing struct.
  *
- * @since version v2.2.0
+ * @since release v2.2.0
+ *
+ * @param entry The entry structure to load with the given fields.
  *
  * @param facility The facility code of the event this entry describes. This
  * should be a \c STUMPLESS_FACILITY value.
@@ -1056,7 +1036,7 @@ stumpless_new_entry( enum stumpless_facility facility,
  * This function is not safe to call from threads that may be asynchronously
  * cancelled, due to the use of memory management functions.
  *
- * @since version v2.1.0
+ * @since release v2.1.0
  *
  * @param facility The facility code of the event this entry describes. This
  * should be a \c STUMPLESS_FACILITY value.
@@ -1227,43 +1207,6 @@ stumpless_set_entry_hostname( struct stumpless_entry *entry,
                               const char *hostname );
 
 /**
- * Sets the msgid for an entry.
- *
- * **Thread Safety: MT-Safe race:msgid**
- * This function is thread safe, of course assuming that the msgid is not
- * changed by any other threads during execution. A mutex is used to coordinate
- * changes to the entry while it is being modified.
- *
- * **Async Signal Safety: AS-Unsafe lock heap**
- * This function is not safe to call from signal handlers due to the use of a
- * non-reentrant lock to coordinate changes and the use of memory management
- * functions to create the new msgid and free the old one.
- *
- * **Async Cancel Safety: AC-Unsafe lock heap**
- * This function is not safe to call from threads that may be asynchronously
- * cancelled, due to the use of a lock that could be left locked as well as
- * memory management functions.
- *
- * @since release v1.6.0.
- *
- * @param entry The entry for which the msgid will be set.
- *
- * @param msgid A NULL-terminated string holding the new msgid for the entry.
- * The string must be in the ASCII printable range 33 <= character <= 126 as
- * specified in RFC5424. This will be copied in to the entry, and therefore
- * may be modified or freed after this call without affecting the entry. If
- * this is NULL, then a single '-' character will be used, as specified as
- * the NILVALUE in RFC 5424.
- *
- * @return The modified entry if no error is encountered. If an error is
- * encountered, then NULL is returned and an error code is set appropriately.
- */
-STUMPLESS_PUBLIC_FUNCTION
-struct stumpless_entry *
-stumpless_set_entry_msgid( struct stumpless_entry *entry,
-                           const char *msgid );
-
-/**
  * Sets the message of a given entry.
  *
  * The message must be a valid format specifier string provided along with the
@@ -1339,6 +1282,76 @@ STUMPLESS_PUBLIC_FUNCTION
 struct stumpless_entry *
 stumpless_set_entry_message_str( struct stumpless_entry *entry,
                                  const char *message );
+
+/**
+ * Sets the message of a given entry.
+ *
+ * **Thread Safety: MT-Safe**
+ * This function is thread safe. A mutex is used to coordinate changes to the
+ * entry while it is being modified.
+ *
+ * **Async Signal Safety: AS-Unsafe lock heap**
+ * This function is not safe to call from signal handlers due to the use of a
+ * non-reentrant lock to coordinate changes and the use of memory management
+ * functions to create the new message and free the old one.
+ *
+ * **Async Cancel Safety: AC-Unsafe lock heap**
+ * This function is not safe to call from threads that may be asynchronously
+ * cancelled, due to the use of a lock that could be left locked as well as
+ * memory management functions.
+ *
+ * @since release v2.2.0
+ *
+ * @param entry The entry to modify.
+ *
+ * @param message The new message to set on the entry. If this is NULL, then it
+ * will be blank in the entry (no characters). This must be a valid UTF-16 string
+ * in shortest form.
+ *
+ * @return The modified entry if no error is encountered. If an error is
+ * encountered, then NULL is returned and an error code is set appropriately.
+ */
+STUMPLESS_PUBLIC_FUNCTION
+struct stumpless_entry *
+stumpless_set_entry_message_str_w( struct stumpless_entry *entry,
+                                   const wchar_t *message );
+
+/**
+ * Sets the msgid for an entry.
+ *
+ * **Thread Safety: MT-Safe race:msgid**
+ * This function is thread safe, of course assuming that the msgid is not
+ * changed by any other threads during execution. A mutex is used to coordinate
+ * changes to the entry while it is being modified.
+ *
+ * **Async Signal Safety: AS-Unsafe lock heap**
+ * This function is not safe to call from signal handlers due to the use of a
+ * non-reentrant lock to coordinate changes and the use of memory management
+ * functions to create the new msgid and free the old one.
+ *
+ * **Async Cancel Safety: AC-Unsafe lock heap**
+ * This function is not safe to call from threads that may be asynchronously
+ * cancelled, due to the use of a lock that could be left locked as well as
+ * memory management functions.
+ *
+ * @since release v1.6.0.
+ *
+ * @param entry The entry for which the msgid will be set.
+ *
+ * @param msgid A NULL-terminated string holding the new msgid for the entry.
+ * The string must be in the ASCII printable range 33 <= character <= 126 as
+ * specified in RFC5424. This will be copied in to the entry, and therefore
+ * may be modified or freed after this call without affecting the entry. If
+ * this is NULL, then a single '-' character will be used, as specified as
+ * the NILVALUE in RFC 5424.
+ *
+ * @return The modified entry if no error is encountered. If an error is
+ * encountered, then NULL is returned and an error code is set appropriately.
+ */
+STUMPLESS_PUBLIC_FUNCTION
+struct stumpless_entry *
+stumpless_set_entry_msgid( struct stumpless_entry *entry,
+                           const char *msgid );
 
 /**
  * Puts the param in the element at the given index of an entry.
@@ -1489,20 +1502,20 @@ stumpless_set_entry_param_value_by_name( struct stumpless_entry *entry,
  * **Async Cancel Safety: AC-Unsafe lock**
  * This function is not safe to call from threads that may be asynchronously
  * cancelled, due to the use of a lock that could be left locked.
-*
-* @since release v1.6.0.
-*
-* @param entry The entry to set the priority values of.
-*
-* @param facility The new facility of the entry. This must be a valid value
-* according to RFC 5424, available as STUMPLESS_FACILITY constants.
-*
-* @param severity The new severity of the entry. This must be a valid value
-* according to RFC 5424, available as STUMPLESS_SEVERITY constants.
-*
-* @return The modified entry if no error is encountered. If an error is
-* encountered, then NULL is returned and an error code is set appropriately.
-*/
+ *
+ * @since release v1.6.0.
+ *
+ * @param entry The entry to set the priority values of.
+ *
+ * @param facility The new facility of the entry. This must be a valid value
+ * according to RFC 5424, available as STUMPLESS_FACILITY constants.
+ *
+ * @param severity The new severity of the entry. This must be a valid value
+ * according to RFC 5424, available as STUMPLESS_SEVERITY constants.
+ *
+ * @return The modified entry if no error is encountered. If an error is
+ * encountered, then NULL is returned and an error code is set appropriately.
+ */
 STUMPLESS_PUBLIC_FUNCTION
 struct stumpless_entry *
 stumpless_set_entry_priority( struct stumpless_entry *entry,
